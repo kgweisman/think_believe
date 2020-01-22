@@ -1,0 +1,461 @@
+---
+title: "Think Believe 1 (forced choice)"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = F, message = F)
+```
+
+In this notebook we analyze the first "think/believe" task, in which participants completed a series of fill-in-the-blanks by choosing between two options: "think" and "believe."
+
+
+```{r}
+source("./scripts/dependencies.R")
+source("./scripts/custom_funs.R")
+source("./scripts/var_recode_contrast.R")
+```
+
+```{r}
+d1_raw <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = "V1&V2 no dupes") %>%
+  # eliminate one duplicate
+  group_by(thb1_subj) %>%
+  top_n(1, thb1_batc) %>% 
+  ungroup() %>%
+  mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country))
+```
+
+```{r}
+key1 <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = 1)[1,] %>% 
+  t() %>% 
+  data.frame() %>% 
+  rownames_to_column("question") %>%
+  rename(question_text = ".") %>%
+  # get rid of white space
+  mutate(question_text = gsub("\\s+", " ", question_text)) %>%
+  # hand code question categories
+  mutate(category = case_when(
+    grepl("final paper", question_text) |
+      grepl("highway into town", question_text) |
+      grepl("grocery store", question_text) |
+      grepl("chemistry book", question_text) |
+      grepl("cooking noodles", question_text) ~ "life fact",
+    grepl("praying to God", question_text) |
+      grepl("angels deliver", question_text) |
+      grepl("go to Heaven", question_text) |
+      grepl("changed water", question_text) |
+      grepl("human sins", question_text) ~ "Christian religious",
+    grepl("cycle of death", question_text) |
+      grepl("Buddha found spiritual", question_text) |
+      grepl("lotus flower bloomed", question_text) |
+      grepl("ghosts suffer", question_text) |
+      grepl("burning incense", question_text) ~ "Buddhist religious",
+    grepl("moon goes around", question_text) |
+      grepl("Barack Obama", question_text) |
+      grepl("using batteries", question_text) |
+      grepl("Brazil", question_text) |
+      grepl("ancient Roman", question_text) ~ "well-known fact",
+    grepl("octopus", question_text) |
+      grepl("John Brown", question_text) |
+      grepl("taller mountain", question_text) |
+      grepl("species of fish", question_text) |
+      grepl("contains more copper", question_text) ~ "esoteric fact",
+    TRUE ~ NA_character_)) %>%
+  mutate(category = factor(category, 
+                           levels = c("Christian religious", 
+                                      "Buddhist religious", 
+                                      "well-known fact", 
+                                      "esoteric fact", 
+                                      "life fact")),
+         super_cat = case_when(grepl("fact", category) ~ "fact",
+                               grepl("religious", category) ~ "religious",
+                               TRUE ~ NA_character_),
+         super_cat = factor(super_cat, levels = c("religious", "fact"))) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order),
+         question_text = gsub("‚Äô", "'", question_text),
+         question_text_short = gsub("^.*that ", "...", question_text),
+         var_name = names(d1_raw[names(d1_raw) != "thb1_version"]))
+```
+
+```{r}
+d1 <- d1_raw %>%
+  filter(thb1_ctry %in% levels_country) %>%
+  mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country))
+
+contrasts(d1$thb1_ctry) = contrast_country
+```
+
+```{r}
+d1_long <- d1 %>%
+  gather(question, response, thb1_ghostshunger:thb1_obama) %>%
+  mutate(think = ifelse(grepl("think", response) |
+                          grepl("thought", response), T, F),
+         believe = ifelse(grepl("belie", response), T, F),
+         response_cat = case_when(believe == T ~ "believe",
+                                  think == T ~ "think",
+                                  TRUE ~ NA_character_),
+         response_cat = factor(response_cat, levels = c("think", "believe"))) %>%
+  left_join(key1 %>% select(-question) %>% rename(question = var_name))
+
+contrasts(d1_long$thb1_ctry) = contrast_country
+# contrasts(d1_long$category) = contrast_category
+contrasts(d1_long$category) = contrast_category_orth
+contrasts(d1_long$super_cat) = contrast_super_cat
+```
+
+```{r}
+# implement exclusion criteria and rename country variable
+d1 <- d1 %>% 
+  filter(thb1_ordr == "Yes", thb1_attn == "Pass") %>%
+  rename(country = thb1_ctry)
+
+d1_long <- d1_long %>% 
+  filter(thb1_ordr == "Yes", thb1_attn == "Pass") %>%
+  rename(country = thb1_ctry)
+```
+
+
+# Overview
+
+From the preregistration ([link](https://aspredicted.org/p6iy3.pdf)):
+
+> "Our overarching hypothesis for the present study is that [...] other languages will have an epistemic verb that is more likely to be used for religious attitude reports (similar to English “believe”) and a different epistemic verb that is more likely to be used for matter-of-fact attitude reports (similar to English “think”). 
+> 
+> For this study, we are examining five languages in five regions of interest: (i) Mandarin in China; (ii) Thai in Thailand; (iii) Bislama (an English-based creole
+language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) American English in the Bay Area, California. 
+> 
+> We thus have five more specific sub-hypotheses. For each of the first four languages / regions of interest, we hypothesize that a set of words or phrases exists whose usage parallels the difference between usage of “think” and “believe” in American English, with one word or phrase (the “think” analogue) being used for more matter-of-fact attitude reports and the other (the “believe” analogue) being more likely to be used for religious attitude reports. That gives us our first four sub-hypotheses: that Mandarin, Thai, Bislama and Fante speakers will each use two different words in a manner parallel to the use of
+“think” and “believe” in an American English setting as identified by Heiphetz, Landers, and Van Leeuwen. Our fifth sub-hypothesis is that the Bay Area portion of the study will replicate the results of the earlier study of Heiphetz, Landers, and Van Leeuwen."
+
+
+<p style="color:darkred">**KW EXECUTIVE SUMMARY (2020-01-19): We replicated the original finding in the US: participants were more likely to circle "believe" for religious than fact questions. We found the same pattern in all five countries/langauges included in this study.**</p>
+
+<p style="color:darkred">**The pattern was somewhat weaker in Ghana/Fante than in other countries/language (though it was still significant), and the pattern was somewhat stronger in Thailand/Thai than in other countries/languages.**</p>
+
+
+# Samples
+
+Before we begin, it's important to note that we had unequal sample sizes by country:
+
+```{r}
+d1_raw %>% count(thb1_ctry)
+```
+
+However, `r d1_raw %>% filter(thb1_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d1_raw %>% filter(thb1_ordr == "Yes", thb1_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
+
+```{r}
+d1 %>% count(country)
+```
+
+```{r}
+sample_size_d1 <- d1 %>% 
+  count(country) %>% 
+  data.frame() %>%
+  mutate(country_n = paste0(country, " (n=", n, ")"),
+         country_n = reorder(country_n, as.numeric(country)))
+```
+
+
+# Plots
+
+We'll begin by plotting responses of "think" (red) vs. "believe" (turquoise) to get an overall sense of any patterns in the data.
+
+## By superordinate category
+
+```{r, fig.width = 3, fig.asp = 0.5}
+d1_long %>%
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = super_cat, 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(. ~ country_n, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "category", y = "proportion", fill = "response")
+```
+
+## By category
+
+```{r, fig.width = 3, fig.asp = 0.5}
+d1_long %>%
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = category, 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(. ~ country_n, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "category", y = "proportion", fill = "response")
+```
+
+## By question
+
+```{r, fig.width = 6, fig.asp = 0.7}
+d1_long %>%
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = reorder(str_wrap(question_text_short, 40), order), 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(country_n ~ category, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top",
+        plot.margin = (unit(c(0.2, 0.2, 0.2, 1.8), "cm"))) +
+  labs(x = "category", y = "proportion", fill = "response")
+```
+
+
+# Analysis: KW without looking at preregistration
+
+Here's how I analyzed the data before looking at the preregistration. I think these analyses are valuable because they're a little more efficient than the preregistered analyses -- no need for follow-up tests -- and they directly test the question of whether the effect of interest varies across countries/langauges.
+
+Technical note: Unless specified otherwise, all of these analyses use "effect coding" for categorical variables (e.g., country, category of question) -- meaning that each country/langauge is compared to the "grand mean" collapsing across all countries/languages. Because of degrees of freedom issues, each analysis only compares 4 of the 5 countries to the grand mean -- by default, I've left out the comparison of the US/English to the grand mean, but stats for that comparison could easily be calculated (if we left out another country/language instead). This is just to say that you won't see statements like "The effect was exaggerated in the US relative to other countries," although they might be true.
+
+## KW Analysis #1
+
+First, I used a mixed effects logistic regression predicting how likely a participant was to circle "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to circle "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
+
+```{r, echo = T}
+r1.1 <- lmer(believe ~ super_cat * country 
+             + (1 + super_cat | thb1_subj) + (1 | question),
+             data = d1_long)
+```
+
+```{r}
+regtab_fun(r1.1, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+```
+
+```{r, include = F}
+regtab_ran_fun(r1.1, subj_var = "thb1_subj") %>% regtab_style_fun()
+```
+
+The effects of primary interest are in bold:
+
+- **Category (religious)**: Collapsing across countries/languages, participants were indeed more likely to say "believe" for "religious" questions. This effect is much larger than any of the differences across countries/languages (as you can see by comparing the β values for different effects).
+- Country (Gh.): Participants in Ghana were generally more likely than other participants to say "believe," collapsing across question categories.
+- Country (Th.): Participants in Thailand were generally less likely than other participants to say "believe," collapsing across question categories.
+- Country (Ch.): Participants in China were no more or less likely than other participants to say "believe," collapsing across question categories.
+- Country (Vt.): Participants in Vanuatu were no more or less likely than other participants to say "believe," collapsing across question categories.
+- **Category (religious) x Country (Gh.)**: The difference in rates of "believe" responses between question categories was smaller in Ghana than in other countries.
+- **Category (religious) x Country (Th.)**: The difference in rates of "believe" responses between question categories was larger in Thailand than in other countries.
+- **Category (religious) x Country (Ch.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in China than in other countries.
+- **Category (religious) x Country (Vt.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in Vanuatu than in other countries.
+
+**Take-away: The predicted effect is evident in this dataset. It appears to be exaggerated in Thailand and diminished in Ghana.**
+
+## KW Analyses #1a-1e (by country)
+
+Next, I did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
+
+```{r, echo = T}
+# note: using most maximal common random effects structure
+r1.1_us <- lmer(believe ~ super_cat + 
+                  # (1 + super_cat | thb1_subj) + (1 | question), 
+                  # (1 + super_cat || thb1_subj) + (1 | question), # failed to converge
+                  (1 | thb1_subj) + (1 | question),
+                # (1 + super_cat | thb1_subj),
+                data = d1_long %>% filter(country == "US"))
+
+r1.1_gh <- lmer(believe ~ super_cat + 
+                  # (1 + super_cat | thb1_subj) + (1 | question),
+                  # (1 + super_cat || thb1_subj) + (1 | question), # failed to converge
+                  (1 | thb1_subj) + (1 | question),
+                # (1 + super_cat | thb1_subj),
+                data = d1_long %>% filter(country == "Ghana"))
+
+r1.1_th <- lmer(believe ~ super_cat + 
+                  # (1 + super_cat | thb1_subj) + (1 | question), 
+                  # (1 + super_cat || thb1_subj) + (1 | question), # failed to converge
+                  (1 | thb1_subj) + (1 | question),
+                # (1 + super_cat | thb1_subj),
+                data = d1_long %>% filter(country == "Thailand"))
+
+r1.1_ch <- lmer(believe ~ super_cat + 
+                  # (1 + super_cat | thb1_subj) + (1 | question), 
+                  # (1 + super_cat || thb1_subj) + (1 | question), # failed to converge
+                  (1 | thb1_subj) + (1 | question),
+                # (1 + super_cat | thb1_subj),
+                data = d1_long %>% filter(country == "China"))
+
+r1.1_vt <- lmer(believe ~ super_cat + 
+                  # (1 + super_cat | thb1_subj) + (1 | question), # failed to converge
+                  # (1 + super_cat || thb1_subj) + (1 | question),
+                  (1 | thb1_subj) + (1 | question),
+                # (1 + super_cat | thb1_subj),
+                data = d1_long %>% filter(country == "Vanuatu"))
+```
+
+```{r}
+bind_rows(regtab_fun(r1.1_us) %>% mutate(Country = "US"),
+          regtab_fun(r1.1_gh) %>% mutate(Country = "Ghana"),
+          regtab_fun(r1.1_th) %>% mutate(Country = "Thailand"),
+          regtab_fun(r1.1_ch) %>% mutate(Country = "China"),
+          regtab_fun(r1.1_vt) %>% mutate(Country = "Vanuatu")) %>%
+  select(Country, everything()) %>%
+  regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
+  collapse_rows(1)
+```
+
+The effects of primary interest are in bold, and **the take-away is clear: In every country/language, participants were more likely to say "believe" in "religious" questions than in "fact" questions**.
+
+
+## KW Analysis #2
+
+In this analysis, I treated country/language as a random rather than fixed effect (with participants nested within countries). (Note that I had to use a simpler random effects structure in order to get the model to converge.)
+
+```{r, echo = T}
+r1.2 <- lmer(believe ~ super_cat 
+             # + (1 + super_cat | country/thb1_subj) + (1 | question), # failed to converge
+             # + (1 + super_cat || country/thb1_subj) + (1 | question), # failed to converge
+             # + (1 + super_cat | country/thb1_subj), # failed to converge
+             + (1 | country/thb1_subj) + (1 | question),
+             data = d1_long)
+```
+
+```{r}
+regtab_fun(r1.2) %>% regtab_style_fun(row_emph = 2)
+```
+
+```{r, include = F}
+regtab_ran_fun(r1.2, subj_var = "thb1_subj") %>% regtab_style_fun()
+```
+
+The effect still holds.
+
+## KW Analysis #3
+
+Finally, I ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. I compared these categories using planned orthogonal contrasts.
+
+```{r, echo = T}
+r1.3 <- lmer(believe ~ category * country 
+             # + (1 + category | thb1_subj) + (1 | question), # failed to converge
+             + (1 + category || thb1_subj) + (1 | question),
+             # + (1 + category | thb1_subj), 
+             # + (1 + category || thb1_subj), 
+             # + (1 | thb1_subj) + (1 | question),
+             data = d1_long)
+```
+
+```{r}
+regtab_fun(r1.3, 
+           predictor_var1 = "category_relig_fact", 
+           predictor_name1 = "Category (Religious vs. fact)",
+           predictor_var2 = "category_relig_C_B",
+           predictor_name2 = "Category (Christian vs. Buddhist religious)",
+           predictor_var3 = "category_fact_WE_L",
+           predictor_name3 = "Category (well-known & esoteric vs. personal fact)",
+           predictor_var4 = "category_fact_W_E",
+           predictor_name4 = "Category (well-known vs. esoteric fact)") %>% 
+  regtab_style_fun(row_emph = c(2:5, 10:25)) %>%
+  group_rows("Intercept", start_row = 1, end_row = 1) %>%
+  group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
+  group_rows("Country comparisons", start_row = 6, end_row = 9) %>%
+  group_rows("Interactions: Ghana", start_row = 10, end_row = 13) %>%
+  group_rows("Interactions: Thailand", start_row = 14, end_row = 17) %>%
+  group_rows("Interactions: China", start_row = 18, end_row = 21) %>%
+  group_rows("Interactions: Vanuatu", start_row = 22, end_row = 25)
+```
+
+```{r, include = F}
+regtab_ran_fun(r1.3, subj_var = "thb1_subj") %>% regtab_style_fun()
+```
+
+The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religoius vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and exaggerated in Thailand.
+
+The second orthogonal contrast compared Christian to Buddhist "religious" questions. Overall, participants were more likely to circle "believe" for Christian questions, and this tendency was exaggerated in Ghana and Vanuatu (which were predominantly Christian samples) and diminished in Thailand and China (which were more Buddhist samples).
+
+The third orthogonal contrast compared well-known and esoteric facts, on the one hand, to personal facts, on the other. Overall, participants were more likely to circle "believe" for well-known and esoteric facts, and this tendency was diminished in Ghana and China, and exaggerated in Thailand and Vanuatu.
+
+The fourth orthogonal contrast compared well-known to esoteric facts. Overall, particpants were more likely to circle "believe" for well-known factrs, and then tendency was diminished in China, and exaggerated in Vanuatu.
+
+Note that these findings statistically control for differences across samples in the overall rate of circling "believe" (which was generally higher in Ghana and lower in Thailand).
+
+
+# Analysis: Based on preregistration
+
+From preregistration:
+
+> "Survey 1: We will conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 2 (Statement Type: religion vs. fact) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form the word “believe” (or its respective translation) as the dependent measure. To look for finer-grained differences between different religious and factual statements, we will also conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 5 (Statement Type: Buddhist religious statements vs. Christian religious statements vs. life facts vs. well-known facts vs. esoteric facts) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form of the word “believe” (or its respective translation) as the dependent measure. In all cases where omnibus ANOVAs are significant, we will conduct pairwise analyses comparing each statement type with each other statement type and each site with each other site."
+
+```{r, echo = T}
+d1_anova <- d1_long %>%
+  distinct(thb1_subj, country, super_cat, question, believe) %>%
+  group_by(thb1_subj, country, super_cat) %>%
+  summarise(prop_believe = mean(believe)) %>%
+  ungroup() %>%
+  mutate(thb1_subj = factor(thb1_subj))
+
+contrasts(d1_anova$country) <- contrast_country
+contrasts(d1_anova$super_cat) <- contrast_super_cat
+```
+
+## Prereg Analysis #1
+
+Here is the first preregistered analyis: a 5 (country) x 2 (question category) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants circled "berlieve" as the DV.
+
+```{r, echo = T}
+r1.4 <- d1_anova %>%
+  anova_test(dv = prop_believe, 
+             wid = thb1_subj, 
+             between = country, 
+             within = super_cat)
+
+get_anova_table(r1.4)
+```
+
+This analysis aligns with the regressions above, suggesting that participants' tendency to circle "believe" varied by country/language (`country`) and by question category (`super_cat`), and the difference between question category varied across countries/languages (i.e., there was an interaction: `country:super_cat`).
+
+The preregistration indicated that we'd conduct pairwise follow-up analyses comparing the two question categories and comparing pairs of countires/languages -- but I don't really think we're interested in comparing pairs of countries/languages, so I'm going to skip that for now. Instead, I'll compare the two questions categories within each country/language (to explore the significant interaction).
+
+Here we go:
+
+### Comparing question categories
+
+```{r, echo = T}
+r1.5a <- t.test(prop_believe ~ super_cat, paired = T, d1_anova); r1.5a
+```
+
+Collapsing across countries/languages, **participants circled significantly more "believe" responses for questions in the religious category (`r 100 * (r1.5a$estimate[1] %>% round(2))`%) than they did for questions in the fact category (`r 100 * (r1.5a$estimate[2] %>% round(2))`%)**.
+
+### Comparing question categories within countries/languages
+
+```{r, echo = T}
+# US
+r1.5b_us <- t.test(prop_believe ~ super_cat, paired = T,
+                   d1_anova %>% filter(country == "US")); r1.5b_us
+
+# Ghana
+r1.5b_gh <- t.test(prop_believe ~ super_cat, paired = T,
+                   d1_anova %>% filter(country == "Ghana")); r1.5b_gh
+
+# Thailand
+r1.5b_th <- t.test(prop_believe ~ super_cat, paired = T,
+                   d1_anova %>% filter(country == "Thailand")); r1.5b_th
+
+# China
+r1.5b_ch <- t.test(prop_believe ~ super_cat, paired = T,
+                   d1_anova %>% filter(country == "China")); r1.5b_ch
+
+# Vanuatu
+r1.5b_vt <- t.test(prop_believe ~ super_cat, paired = T,
+                   d1_anova %>% filter(country == "Vanuatu")); r1.5b_vt
+```
+
+**The difference between question categories was significant in each country/language considered alone.**
+
+
