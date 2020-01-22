@@ -1,0 +1,8 @@
+# ignore data
+data/*
+*.csv
+*.xls
+*.xlsx
+
+# ignore R files
+.DS_Store
