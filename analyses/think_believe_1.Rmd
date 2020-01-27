@@ -84,7 +84,44 @@ key1 <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = 1)[1,] %>%
 ```{r}
 d1 <- d1_raw %>%
   filter(thb1_ctry %in% levels_country) %>%
-  mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country))
+  mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country),
+         thb1_demo_sex = factor(thb1_demo_sex,
+                                levels = c("Male", "Female", "Other")), 
+         thb1_demo_age = as.numeric(as.character(thb1_demo_age))) %>%
+  mutate_at(vars(thb1_demo_regp, thb1_demo_olang),
+            funs(factor(., levels = c("NO", "YES")))) %>%
+  mutate_at(vars(thb1_demo_rely, thb1_demo_impr, thb1_demo_imsn), 
+            funs(factor(., levels = 1:7))) %>%
+  mutate(thb1_demo_wors = factor(thb1_demo_wors, 
+                                 levels = c("Never", 
+                                            "Once a year or less",
+                                            "A few times a year",
+                                            "Once or twice a month",
+                                            "Every week or more often")),
+         thb1_demo_bgod = factor(thb1_demo_bgod,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb1_demo_bbuh = factor(thb1_demo_bbuh,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb1_demo_bosp = factor(thb1_demo_bosp,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb1_demo_atsn = factor(thb1_demo_atsn,
+                                 levels = c("There is no such thing as supernatural forces or beings",
+                                            "We cannot know if there are supernatural forces and beings",
+                                            "There might be supernatural forces and beings",
+                                            "Supernatural forces and beings exist but we cannot know what they are like",
+                                            "There definitely are supernatural forces and beings"))) %>%
+  mutate_at(vars(thb1_demo_rely, thb1_demo_impr, thb1_demo_wors, thb1_demo_bgod, 
+                 thb1_demo_bbuh, thb1_demo_bosp, thb1_demo_atsn, thb1_demo_imsn), 
+            funs(num = as.numeric(.) - 1))
 
 contrasts(d1$thb1_ctry) = contrast_country
 ```
@@ -457,5 +494,313 @@ r1.5b_vt <- t.test(prop_believe ~ super_cat, paired = T,
 ```
 
 **The difference between question categories was significant in each country/language considered alone.**
+
+
+# Analysis: Religion and religiosity
+
+## Demographics
+
+First, let's just look at how people in different countries replied to the relevant questions. 
+
+### `thb1_demo_regp`: "Are you a part of any religious group?"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = country_n, 
+             # put NAs on top of bar
+             fill = factor(thb1_demo_regp,
+                           levels = c(NA, "NO", "YES"), 
+                           exclude = NULL))) +
+  geom_bar() +
+  labs(x = "country", y = "proportion", 
+       fill = "Are you a part of any religious group?") +
+  theme(legend.position = "top")
+```
+
+### `thb1_demo_rely`: "From 1 to 7, how religious are you? (1 = not religious at all, 7 =
+extremely religious)"
+
+Seems to have been omitted in Thailand?
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = as.numeric(thb1_demo_rely))) +
+  facet_grid(~ country_n) +
+  geom_histogram(binwidth = 1) +
+  scale_x_continuous(breaks = 1:7, minor_breaks = NULL) +
+  labs(x = "From 1 to 7, how religious are you?", 
+       y = "count")
+```
+
+### `thb1_demo_impr`: "From 1 to 7, how important to you is your religious practice?  (1 = not important at all, 7 = of utmost importance)"
+
+Seems to have been omitted in Thailand?
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = as.numeric(thb1_demo_impr))) +
+  facet_grid(~ country_n) +
+  geom_histogram(binwidth = 1) +
+  scale_x_continuous(breaks = 1:7, minor_breaks = NULL) +
+  labs(x = "From 1 to 7, how important to you is your religious practice?", 
+       y = "count")
+```
+
+### `thb1_demo_wors`: "How often do you attend places of worship?"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = thb1_demo_wors)) +
+  facet_grid(~ country_n) +
+  geom_bar() +
+  labs(x = "How often do you attend places of worship?", 
+       y = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+### `thb1_demo_bgod`: "What best describes your level of belief in God?"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = thb1_demo_bgod)) +
+  facet_grid(~ country_n) +
+  geom_bar() +
+  labs(x = "What best describes your level of belief in God?", 
+       y = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+### `thb1_demo_bbuh`: "What best describes your level of belief in Buddha?"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = thb1_demo_bbuh)) +
+  facet_grid(~ country_n) +
+  geom_bar() +
+  labs(x = "What best describes your level of belief in Buddha?", 
+       y = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+### `thb1_demo_bosp`: "What best describes your level of belief in another spiritual being (other than God or Buddha)?"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = thb1_demo_bosp)) +
+  facet_grid(~ country_n) +
+  geom_bar() +
+  labs(x = "What best describes your level of belief in another spiritual being (other than God or Buddha)?", 
+       y = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+### `thb1_demo_atsn`: "What best describes your attitude towards the supernatural?
+
+```{r, fig.width = 3.5, fig.asp = 0.8}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = thb1_demo_atsn)) +
+  facet_grid(~ country_n) +
+  geom_bar() +
+  labs(x = "What best describes your attitude towards the supernatural?", 
+       y = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+### `thb1_demo_imsn`: "From 1 to 7, how important to you is your attitude toward the supernatural? (1 = not important at all, 7 = of utmost importance)"
+
+```{r}
+d1 %>% 
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = as.numeric(thb1_demo_imsn))) +
+  facet_grid(~ country_n) +
+  geom_histogram(binwidth = 1) +
+  scale_x_continuous(breaks = 1:7, minor_breaks = NULL) +
+  labs(x = "From 1 to 7, how important to you is your attitude toward the supernatural?", 
+       y = "count")
+```
+
+## Analyses
+
+Now, let's look at how responses to our think/believe questions might have varied depending on religiosity/etc. For now, I'll just focus on a couple of variables that seem to have been answered in reasonable ways.
+
+### `thb1_demo_rely`: “From 1 to 7, how religious are you? (1 = not religious at all, 7 = extremely religious)”
+
+```{r, echo = T}
+r1.6 <- lmer(believe ~ super_cat * country * thb1_demo_rely_num
+             + (1 + super_cat | thb1_subj) + (1 | question),
+             data = d1_long %>% 
+               filter(country != "Thailand") %>%
+               mutate(thb1_demo_rely_num = scale(thb1_demo_rely_num)),
+             contrasts = list(country = "contr.sum"))
+```
+
+```{r}
+regtab_fun(r1.6, std_beta = T, 
+           country_var1 = "country1", country_name1 = "Country (US)",
+           country_var2 = "country2", country_name2 = "Country (Ghana)",
+           country_var3 = "country3", country_name3 = "Country (China)",
+           predictor_var1 = "thb1_demo_rely_num", 
+           predictor_name1 = "How religious are you?") %>% 
+  regtab_style_fun(row_emph = c(10, 14:16))
+```
+
+This analysis suggests that greater religiosity was associated with an increased distinction between religious and fact questions. (Note that this analysis omits participants from Thailand, who did not answer this question about religiosity.)
+
+```{r}
+d1_long %>% 
+  filter(country != "Thailand") %>%
+  group_by(country, thb1_subj, thb1_demo_rely_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  ggplot(aes(x = thb1_demo_rely_num, y = believe_prop, color = super_cat)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:6, labels = levels(d1$thb1_demo_rely)) +
+  theme(legend.position = "top") +
+  labs(x = "How religious are you?", y = "Proportion 'believe' responses",
+       color = "Category")
+```
+
+```{r}
+d1_long %>% 
+  filter(country != "Thailand") %>%
+  group_by(country, thb1_subj, thb1_demo_rely_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  spread(super_cat, believe_prop) %>%
+  mutate(diff = religious - fact) %>%
+  ggplot(aes(x = thb1_demo_rely_num, y = diff)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:6, labels = levels(d1$thb1_demo_rely)) +
+  theme(legend.position = "top") +
+  labs(x = "How religious are you?", 
+       y = "Difference in proportion 'believe' responses\n(religious questions - fact questions)",
+       color = "Category")
+```
+
+### `thb1_demo_impr`: "From 1 to 7, how important to you is your religious practice?  (1 = not important at all, 7 = of utmost importance)"
+
+```{r, echo = T}
+r1.7 <- lmer(believe ~ super_cat * country * thb1_demo_impr_num
+             + (1 + super_cat | thb1_subj) + (1 | question),
+             data = d1_long %>% 
+               filter(country != "Thailand") %>%
+               mutate(thb1_demo_impr_num = scale(thb1_demo_impr_num)),
+             contrasts = list(country = "contr.sum"))
+```
+
+```{r}
+regtab_fun(r1.7, std_beta = T, 
+           country_var1 = "country1", country_name1 = "Country (US)",
+           country_var2 = "country2", country_name2 = "Country (Ghana)",
+           country_var3 = "country3", country_name3 = "Country (China)",
+           predictor_var1 = "thb1_demo_impr_num", 
+           predictor_name1 = "How important is your religious practice?") %>% 
+  regtab_style_fun(row_emph = c(10, 14:16))
+```
+
+This analysis suggests that more importance placed on religious practice was associated with an increased distinction between religious and fact questions. (Note that this analysis omits participants from Thailand, who did not answer this question about religiosity.)
+
+```{r}
+d1_long %>% 
+  filter(country != "Thailand") %>%
+  group_by(country, thb1_subj, thb1_demo_impr_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  ggplot(aes(x = thb1_demo_impr_num, y = believe_prop, color = super_cat)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:6, labels = levels(d1$thb1_demo_impr)) +
+  theme(legend.position = "top") +
+  labs(x = "How important is your religious practice?", y = "Proportion 'believe' responses",
+       color = "Category")
+```
+
+```{r}
+d1_long %>% 
+  filter(country != "Thailand") %>%
+  group_by(country, thb1_subj, thb1_demo_impr_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  spread(super_cat, believe_prop) %>%
+  mutate(diff = religious - fact) %>%
+  ggplot(aes(x = thb1_demo_impr_num, y = diff)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:6, labels = levels(d1$thb1_demo_impr)) +
+  theme(legend.position = "top") +
+  labs(x = "How important is your religious practice?", 
+       y = "Difference in proportion 'believe' responses\n(religious questions - fact questions)",
+       color = "Category")
+```
+
+### `thb1_demowors`: "How often do you attend places of worship?"
+
+```{r, echo = T}
+r1.8 <- lmer(believe ~ super_cat * country * thb1_demo_wors_num
+             + (1 + super_cat | thb1_subj) + (1 | question),
+             data = d1_long %>% 
+               mutate(thb1_demo_wors_num = scale(thb1_demo_wors_num)))
+```
+
+```{r}
+regtab_fun(r1.8, std_beta = T, 
+           predictor_var1 = "thb1_demo_wors_num", 
+           predictor_name1 = "How often do you attend places of worship?") %>% 
+  regtab_style_fun(row_emph = c(12, 17:20))
+```
+
+This analysis suggests that frequency of attendence was associated with an increased distinction between religious and fact questions. 
+
+```{r}
+d1_long %>% 
+  group_by(country, thb1_subj, thb1_demo_wors_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  ggplot(aes(x = thb1_demo_wors_num, y = believe_prop, color = super_cat)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:4, labels = levels(d1$thb1_demo_wors)) +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(x = "How often do you attend places of worship?", 
+       y = "Proportion 'believe' responses",
+       color = "Category")
+```
+
+```{r}
+d1_long %>% 
+  group_by(country, thb1_subj, thb1_demo_wors_num, super_cat) %>%
+  summarise(believe_prop = mean(believe, na.rm = T)) %>%
+  ungroup() %>%
+  spread(super_cat, believe_prop) %>%
+  mutate(diff = religious - fact) %>%
+  ggplot(aes(x = thb1_demo_wors_num, y = diff)) +
+  facet_grid(. ~ country) +
+  geom_jitter(alpha = 0.2, width = 0.1, height = 0.02) +
+  geom_smooth(method = "lm") +
+  scale_x_continuous(breaks = 0:4, labels = levels(d1$thb1_demo_wors)) +
+  theme(legend.position = "top",
+        axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+  labs(x = "How often do you attend places of worship?", 
+       y = "Difference in proportion 'believe' responses\n(religious questions - fact questions)",
+       color = "Category")
+```
+
+
 
 
