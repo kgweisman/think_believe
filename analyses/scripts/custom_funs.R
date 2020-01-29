@@ -304,3 +304,22 @@ gg_color_hue <- function(n) {
   hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
+
+# function for making histograms by percentage (by country)
+demo_plot_fun <- function(df, ss_df, var){
+  plot <- df %>%
+    left_join(ss_df) %>%
+    count(country_n, !!sym(var)) %>%
+    group_by(country_n) %>%
+    mutate(prop = n/sum(n),
+           answered = ifelse(is.na(!!sym(var)), T, F)) %>%
+    ungroup() %>%
+    ggplot(aes(x = !!sym(var), y = prop, fill = answered)) +
+    facet_grid(~ country_n) +
+    geom_bar(stat = "identity", alpha = 0.7, color = "black", size = 0.1, 
+             show.legend = F) +
+    scale_fill_manual(values = c(gg_color_hue(1), "gray"))
+  
+  return(plot)
+}
+
