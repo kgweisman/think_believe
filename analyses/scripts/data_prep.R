@@ -789,3 +789,292 @@ sample_size_d2 <- d2 %>%
          country_n = reorder(country_n, as.numeric(country)))
 
 
+# think believe 3 (forced choice, controlled content) -----
+
+# load raw data
+d3_raw <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = "V1 & V2 no dupes") %>%
+  # ensure no duplicates
+  group_by(thb3_subj) %>%
+  top_n(1, thb3_batc) %>% 
+  ungroup() %>%
+  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country))
+
+# make question key
+key3 <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = 1)[1,] %>% 
+  data.frame() %>%
+  # get rid of extra qualtrics questions
+  select(-c(StartDate:UserLanguage)) %>%
+  t() %>% 
+  data.frame() %>% 
+  rownames_to_column("question") %>%
+  rename(question_text = ".") %>%
+  # get rid of white space
+  mutate(question_text = gsub("\\s+", " ", question_text)) %>%
+  # hand code question categories
+  mutate(category = case_when(
+    grepl("NASA", question_text) |
+      grepl("medical school", question_text) |
+      grepl("Astronomers", question_text) |
+      grepl("reads history", question_text) |
+      grepl("travels many places", question_text) ~ "scientific",
+    grepl("Scientology", question_text) |
+      grepl("God sent ten plagues", question_text) |
+      grepl("holy man", question_text) |
+      grepl("Mayan religion", question_text) |
+      grepl("Church of Christ Scientist", question_text) ~ "religious",
+    TRUE ~ NA_character_)) %>%
+  mutate(category = factor(category, 
+                           levels = c("religious", 
+                                      "scientific")),
+         super_cat = case_when(grepl("scientific", category) ~ "scientific",
+                               grepl("religious", category) ~ "religious",
+                               TRUE ~ NA_character_),
+         super_cat = factor(super_cat, levels = c("religious", "scientific"))) %>%
+  rownames_to_column("order") %>%
+  mutate(order = as.numeric(order),
+         question_text = gsub("‚Äô", "'", question_text),
+         question_text_short = gsub("^.*that ", "...", question_text),
+         var_name = names(d3_raw[names(d3_raw) != "thb3_version"]))
+
+# clean up variables
+d3 <- d3_raw %>%
+  filter(thb3_ctry %in% levels_country) %>%
+  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country),
+         thb3_demo_sex = factor(thb3_demo_sex,
+                                levels = c("Male", "Female", "Other")), 
+         thb3_demo_age = as.numeric(as.character(thb3_demo_age))) %>%
+  mutate_at(vars(thb3_demo_regp, thb3_demo_olang),
+            funs(factor(., levels = c("NO", "YES")))) %>%
+  mutate_at(vars(thb3_demo_rely, thb3_demo_impr, thb3_demo_imsn), 
+            funs(factor(., levels = 1:7))) %>%
+  mutate(thb3_demo_wors = factor(thb3_demo_wors, 
+                                 levels = c("Never", 
+                                            "Once a year or less",
+                                            "A few times a year",
+                                            "Once or twice a month",
+                                            "Every week or more often")),
+         thb3_demo_bgod = factor(thb3_demo_bgod,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb3_demo_bbuh = factor(thb3_demo_bbuh,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb3_demo_bosp = factor(thb3_demo_bosp,
+                                 levels = c("Not at all believe",
+                                            "Believe slightly",
+                                            "Believe moderately",
+                                            "Believe strongly")),
+         thb3_demo_atsn = factor(thb3_demo_atsn,
+                                 levels = c("There is no such thing as supernatural forces or beings",
+                                            "We cannot know if there are supernatural forces and beings",
+                                            "There might be supernatural forces and beings",
+                                            "Supernatural forces and beings exist but we cannot know what they are like",
+                                            "There definitely are supernatural forces and beings"))) %>%
+  mutate_at(vars(thb3_demo_rely, thb3_demo_impr, thb3_demo_wors, thb3_demo_bgod, 
+                 thb3_demo_bbuh, thb3_demo_bosp, thb3_demo_atsn, thb3_demo_imsn), 
+            funs(num = as.numeric(.) - 1)) %>%
+  mutate(thb3_religion = case_when(
+    thb3_demo_regp_1_TEXT %in% c("Anglican", 
+                                 "Anglican/SDA",
+                                 "AoG",
+                                 "A.O.G youth group", 
+                                 "Anuchon Church", 
+                                 "AOG: Youth", 
+                                 "Apostolic", 
+                                 "Bible Church & CMC Church",
+                                 "Bible church and Presbyterian church",
+                                 "Black Campus Ministry",
+                                 "Campus crusade for Christ",
+                                 "Catholic Christian",
+                                 "Catholic Church",
+                                 "cell group Anuchon",
+                                 "CF, Youth Ministry etc.",
+                                 "Chorus youth",
+                                 "Christian", 
+                                 "Christian house church",
+                                 "Christian - Methodist",
+                                 "Christian - Pentecost", 
+                                 "Christian - Roman Catholic",
+                                 "Christian (Catholic)", 
+                                 "Christian (Pentecost)",
+                                 "Christian (Potters hand)",
+                                 "Christian (Roman)", 
+                                 "Christian church in Sop Tia",
+                                 "Christian Fellowship Group (CF)", 
+                                 "Christianity", 
+                                 "Christianity (overcomers and Congress Int. Church)",
+                                 "Christianity (Roman Catholic)", 
+                                 "Christianity (Roman)", 
+                                 "Christians on Campus SJSU",
+                                 "Church",
+                                 "church",
+                                 "Church Youth",
+                                 "Church Youth and Religious Singing Group",
+                                 "church youths", 
+                                 "Church, Youth fellowship",
+                                 "Church: Sunday School + Services",
+                                 "Community Prayer group", 
+                                 "Community Prayer Group",
+                                 "D.R.E.A.M Campus Ministry",
+                                 "Emalus religious group, student life association",
+                                 "Epauto church (Port Vila)", 
+                                 "Father's House", 
+                                 "Fathers house",
+                                 "Fellowship",
+                                 "friend group",
+                                 "Glorious church people",
+                                 "Glourise Church going and pray for sick people",
+                                 "Go to Catholic church every Sunday",
+                                 "Go to church every Sunday", 
+                                 "got to church",
+                                 "go to church",
+                                 "group of Youth",
+                                 "House church", 
+                                 "House church of Christian",
+                                 "I am part or member of Potoroki youth",
+                                 "ICOMB", 
+                                 "Jehova's Witnesses",
+                                 "Jehovah's Witnesses",
+                                 "joy with Municipality group", 
+                                 "Just Youth's",
+                                 "Kids prayer warrior",
+                                 "Korean Campus Crusade for Christ?",
+                                 "KYB - Knowing Your Bible",
+                                 "LDS",
+                                 "LDS Mormon",
+                                 "Leader",
+                                 "Leader of the Youth",
+                                 "Living water, Heram praise", 
+                                 "Listen to sermon",
+                                 "local churches",
+                                 "Mae Ka Boo Church",
+                                 "Member of the youth, children class teacher",
+                                 "Missonettes",
+                                 "Mormon helping hands",
+                                 "NTM Youth", 
+                                 "only P.R.C",
+                                 "Pastor and Apostle",
+                                 "Pathfinder, Ambassador, Youth",
+                                 "Pathway Ministry", 
+                                 "praise & worship, visitation, combine service, youth, choir practice",
+                                 "Pray warrior",
+                                 "Praying Sunday",
+                                 "Presbertent", 
+                                 "Presbyterian", 
+                                 "Presbyterian Church",
+                                 "Pulse", 
+                                 "Roman Catholic",
+                                 "Roman Catholic (technically)",
+                                 "Scripture Union", 
+                                 "SDA Youth",
+                                 "singing",
+                                 "Siyon Group/ like caregroup",
+                                 "Student life (USP)", 
+                                 "sunday school",
+                                 "sunday school, youth etc",
+                                 "Sunday School, Bible study and Youth",
+                                 "Sunday School, Youth",
+                                 "Teacher for Sabbth School",
+                                 "Ward Choir, Elder's quorem", 
+                                 "Watchnight service",
+                                 "Watchnight service ordination",
+                                 "Words Christian fellowship",
+                                 "Yes kawariki S.D.A Church",
+                                 "Yes, Prayer group, Church Instrumentalis",
+                                 "Yes! Church youth (drumer)",
+                                 "Yes! - youth group/ministry -children ministry",
+                                 "Young single adults", 
+                                 "youth",
+                                 "Youth", 
+                                 "Youth Activities",
+                                 "Youth Fellowship", 
+                                 "Youth group", 
+                                 "Youth Group",
+                                 "Youth member", 
+                                 "Youth Member",
+                                 "Youth Members",
+                                 "Youth, Church Band and Women's Ministry",
+                                 "Youth, Sunday School",
+                                 "Youth, Sunday school", 
+                                 "Youth, Sunday School, etc...",
+                                 "Youth/Men's Fellowship",
+                                 "Youths (Port Vila) Anglican",
+                                 "(Youth)",
+                                 "youths") ~ "Christian",
+    thb3_demo_regp_1_TEXT %in% c("Buddhism", 
+                                 "Buddhism club",
+                                 "Buddhist", 
+                                 "Buddhist camping",
+                                 "Buddhist Camping",
+                                 "Buddhist Club",
+                                 "Buddhist Sunday",
+                                 "Buddhist, make merit in temple, go to temple",
+                                 "Chant / Merit / Listening to Buddhist's teaching",
+                                 "facebook village temple",
+                                 "Go to neighbor temple", 
+                                 "Go to temple",
+                                 "Going to temple", 
+                                 "Guan Yin Citta (created by an Australian Chinese",
+                                 "holy day",
+                                 "Holy day",
+                                 "make merit", 
+                                 "make merit in holy day",
+                                 "Make merit",
+                                 "Meditation",
+                                 "meditation camping",
+                                 "Merit give food to monk", 
+                                 "Merit, going to temple in holy day",
+                                 "Merit group",
+                                 "Monk",
+                                 "Temple",
+                                 "to make merit, listening to Buddhist is teaching",
+                                 "to temple") ~ "Buddhist",
+    is.na(thb3_demo_regp_1_TEXT) |
+      thb3_demo_regp_1_TEXT %in% c("mdata", "Missing Data", "not trans", 
+                                   "Not trans", "none") ~ NA_character_,
+    TRUE ~ "Other"
+  ))
+
+# make longform dataframe
+d3_long <- d3 %>%
+  gather(question, response, thb3_aliens.nasa:thb3_dog.wellwater) %>%
+  mutate(think = ifelse(grepl("think", response) |
+                          grepl("thought", response), T, F),
+         believe = ifelse(grepl("belie", response), T, F),
+         response_cat = case_when(believe == T ~ "believe",
+                                  think == T ~ "think",
+                                  TRUE ~ NA_character_),
+         response_cat = factor(response_cat, levels = c("think", "believe"))) %>%
+  left_join(key3 %>% select(-question) %>% rename(question = var_name))
+
+# implement exclusion criteria, rename country variable, and add demo variables
+d3 <- d3 %>% 
+  filter(thb3_ordr == "Yes", thb3_attn == "Pass") %>%
+  rename(country = thb3_ctry) %>%
+  left_join(demo_p456 %>% select(-country), by = c("thb3_subj" = "subj"))
+
+d3_long <- d3_long %>% 
+  filter(thb3_ordr == "Yes", thb3_attn == "Pass") %>%
+  rename(country = thb3_ctry) %>%
+  left_join(demo_p456 %>% select(-country), by = c("thb3_subj" = "subj"))
+
+# set contrasts
+contrasts(d3$country) = contrast_country
+contrasts(d3_long$country) = contrast_country
+# contrasts(d3_long$category) = contrast_category
+contrasts(d3_long$category) = contrast_super_cat # edit if needed later
+contrasts(d3_long$super_cat) = contrast_super_cat
+
+# make sample size df
+sample_size_d3 <- d3 %>% 
+  count(country) %>% 
+  data.frame() %>%
+  mutate(country_n = paste0(country, " (n=", n, ")"),
+         country_n = reorder(country_n, as.numeric(country)))
+
+
+
