@@ -1,0 +1,193 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+source("./scripts/dependencies.R")
+source("./scripts/custom_funs.R")
+source("./scripts/var_recode_contrast.R")
+```
+
+```{r}
+# thb1 included in packet 4
+demo_p4 <- read_excel("../../../Self other/data/SelfOther_January 22, 2019.xlsx", 
+                      sheet = 1) %>%
+  select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
+  rename(country = soth_ctry) %>%
+  filter(country %in% levels_country) %>%
+  mutate(country = factor(country, levels = levels_country)) %>%
+  rename_all(funs(gsub("soth_", "", .))) %>%
+  mutate_at(vars(subj, demo_age, demo_affr, demo_ses, demo_howr, demo_wors, 
+                 demo_bgod, demo_bbuh, demo_bosp, demo_atsn, demo_tung, demo_olang),
+            funs(as.numeric)) %>%
+  mutate(demo_sex = factor(demo_sex, 
+                           levels = 1:3, 
+                           labels = c("Male", "Female", "Other")),
+         demo_ubru = factor(demo_ubru, 
+                            levels = 2:1, # note opposite coding from p6
+                            c("Urban", "Rural")))
+```
+
+```{r}
+# thb2 included in packet 5
+demo_p5 <- read_excel("../../../Taves experiences/data/Taves_full_dataset_sheet5.xlsx") %>%
+  rename_at(vars(taves_emon, taves_fait, taves_noex),
+            funs(gsub("taves_", "taves_demo_", .))) %>%
+  select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
+  rename(country = taves_ctry) %>%
+  filter(country %in% levels_country) %>%
+  mutate(country = factor(country, levels = levels_country)) %>%
+  rename_all(funs(gsub("taves_", "", .))) %>%
+  mutate_at(vars(subj, demo_age), 
+            funs(as.numeric)) %>%
+  mutate(demo_sex = factor(demo_sex, levels = c("Male", "Female", "Other")),
+         demo_ubru = factor(demo_ubru, levels = c("Urban", "Rural")),
+         demo_ses = as.numeric(gsub("\\).*$", "", demo_ses)),
+         demo_howr1 = recode(demo_howr1,
+                             "Not at all" = 0,
+                             "Slightly" = 1,
+                             "Somewhat" = 2,
+                             "Very" = 3,
+                             "Missing Data" = NA_real_),
+         demo_fait = recode(demo_fait,
+                            "Strongly Disagree" = -2,
+                            "Disagree" = -1,
+                            "Neither Agree nor Disagree" = 0,
+                            "Agree" = 1,
+                            "Strongly Agree" = 2,
+                            "Missing Data" = NA_real_)) %>%
+  mutate_at(vars(demo_affr, demo_regp),
+            funs(recode(tolower(.),
+                        "no" = 0,
+                        "yes" = 1,
+                        "missing data" = NA_real_))) %>%
+  mutate_at(vars(demo_phyn, demo_emon, demo_tung),
+            funs(recode(.,
+                        "Not at all" = 0,
+                        "Slightly" = 1,
+                        "Somewhat" = 2,
+                        "Definitely" = 3,
+                        "Missing Data" = NA_real_))) %>%
+  rename(demo_howr = demo_howr1)
+```
+
+```{r}
+# thb3 included in packet 6
+demo_p6 <- read_excel("../../../Spontaneous thought/data/Complete and cleaned dataset_Spon Thought_Jan.23.2018.xlsx", sheet = 2) %>%
+  select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
+  rename(country = spon_ctry) %>%
+  mutate(country = factor(country, 
+                          levels = c(1, 3, 2, 4, 5), # note strange order 
+                          labels = levels_country)) %>%
+  rename_all(funs(gsub("spon_", "", .))) %>%
+  mutate_at(vars(subj, demo_age, demo_affr, demo_ses, demo_howr, demo_tung),
+            funs(as.numeric)) %>%
+  mutate(demo_sex = factor(demo_sex, 
+                           levels = 1:3, 
+                           labels = c("Male", "Female", "Other")),
+         demo_ubru = factor(demo_ubru, 
+                            levels = 1:2, # note opposite coding from p4 
+                            c("Urban", "Rural")))
+```
+
+```{r}
+# put em all together and what do you get
+demo_p456 <- full_join(demo_p4, demo_p5) %>% full_join(demo_p6) %>%
+  mutate(religion = case_when(
+    demo_rlgn %in% c("Agnostic",
+                     "Agnostic (Was Baptist growing up)",
+                     "Agnostic, but respect around",
+                     "Atheism",
+                     "Currently non-practicing, but I was raised christian",
+                     "Don't believe but ok with everything",
+                     "Humanism, I just believe in myself",
+                     "I don't",
+                     "Jewish / Christian, inactively",
+                     "Jewish/Christian inactive",
+                     "Meme Cult",
+                     "money and food ex. barbecue, Buddhist",
+                     "Mother",
+                     "n/a", 
+                     "N/A",
+                     "NA", 
+                     "Nah",
+                     "Neither",
+                     "No",
+                     "Non",
+                     "None",
+                     "Not set religion practiced",
+                     "not sure yet",
+                     "Not sure, but I believe we are all connected to the earth",
+                     "Nothing", 
+                     "used to practice Christianity - no specific religion at the moment but Christian undertones") ~ "Not religious",
+    grepl("aog", tolower(gsub("\\.", "", demo_rlgn))) |
+      grepl("anglic", tolower(demo_rlgn)) |
+      grepl("apost", tolower(demo_rlgn)) |
+      grepl("assemb", tolower(demo_rlgn)) |
+      grepl("bible", tolower(demo_rlgn)) |
+      grepl("cathol", tolower(demo_rlgn)) |
+      grepl("christ", tolower(demo_rlgn)) |
+      grepl("church", tolower(demo_rlgn)) |
+      grepl("jehov", tolower(demo_rlgn)) |
+      grepl("iclc", tolower(demo_rlgn)) |
+      grepl("lds", tolower(demo_rlgn)) |
+      grepl("methodis", tolower(demo_rlgn)) |
+      grepl("mormon", tolower(demo_rlgn)) |
+      grepl("pentecos", tolower(demo_rlgn)) |
+      grepl("pmc", tolower(demo_rlgn)) |
+      grepl("presb", tolower(demo_rlgn)) |
+      grepl("protest", tolower(demo_rlgn)) |
+      grepl("sda", tolower(gsub("\\.", "", demo_rlgn))) |
+      grepl("sunday", tolower(demo_rlgn)) |
+      grepl("worship", tolower(demo_rlgn)) |
+      demo_rlgn %in% c("A. O. G.", 
+                       "Aoh",
+                       "COC, CMC",
+                       "Ethiopian Orthodox",
+                       "F.C.G.C",
+                       "House of Refuge",
+                       "Living Water",
+                       "Luthran",
+                       "Praying",
+                       "Prespertinan",
+                       "Sabbath Seventh Day Adventist",
+                       "Seventh-Day",
+                       "WCF",
+                       "Youth")  ~ "Christian",
+    grepl("buddh", tolower(demo_rlgn)) ~ "Buddhist",
+    demo_rlgn %in% c("Gajrat", 
+                     "Gujarati", 
+                     "Gujrat", 
+                     "Hindi",
+                     "Hindu, but not very religiously", 
+                     "Hinduism",
+                     "Islam",
+                     "Jainism",
+                     "Judaism",
+                     "Karma parts of Hinduism",
+                     "Muslim",
+                     "Not sure between buddhist and Christian",
+                     "Religion only in my heart",
+                     "religious",
+                     "Shaman",
+                     "Sikh",
+                     "Taoism",
+                     "Thai",
+                     "Traditional belief") ~ "Other religious",
+    demo_rlgn %in% c("mdata", "Missing Data", "missing data",
+                     "not trans", "Not trans") ~ NA_character_,
+    TRUE ~ NA_character_))
+```
+
+```{r}
+ggplot(demo_p456, aes(x = religion)) + 
+  facet_grid(~ country) + 
+  geom_bar(stat = "count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+```{r}
+write_csv(demo_p456, "../data/demo_p456.csv")
+```
+
