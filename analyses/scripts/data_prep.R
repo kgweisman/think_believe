@@ -745,21 +745,40 @@ d2_long <- d2 %>%
                            grepl("thought", response_lemma2), T, F)) %>%
   mutate(believe = ifelse(response_lemma2 %in% c("believe", "belief"), T, F),
          believeX = ifelse(grepl("belie", response_lemma2), T, F)) %>%
+  mutate(know = ifelse(response_lemma2 %in% c("know", "knew", "knows"), T, F),
+         knowX = ifelse(grepl("know", response_lemma2) |
+                          grepl("knew", response_lemma2), T, F)) %>%
+  mutate(response_cat4 = case_when(think == T ~ "think",
+                                   believe == T ~ "believe", 
+                                   know == T ~ "know",
+                                   !is.na(response) ~ "other response", 
+                                   TRUE ~ NA_character_),
+         response_cat4 = factor(response_cat4,
+                                levels = c("other response", "know", 
+                                           "think", "believe"))) %>%
+  mutate(responseX_cat4 = case_when(thinkX == T ~ "think*",
+                                   believeX == T ~ "believe*", 
+                                   knowX == T ~ "know*",
+                                   !is.na(response) ~ "other response", 
+                                   TRUE ~ NA_character_),
+         responseX_cat4 = factor(responseX_cat4,
+                                 levels = c("other response", "know*", 
+                                            "think*", "believe*"))) %>%
   mutate(response_cat3 = case_when(think == T ~ "think",
                                    believe == T ~ "believe",
                                    !is.na(response) ~ "other response",
                                    TRUE ~ NA_character_),
          response_cat3 = factor(response_cat3, 
-                                levels = c("other response", "think", "believe")),
-         responseX_cat3 = case_when(thinkX == T ~ "think*",
+                                levels = c("other response", "think", "believe"))) %>%
+  mutate(responseX_cat3 = case_when(thinkX == T ~ "think*",
                                     believeX == T ~ "believe*",
                                     !is.na(response) ~ "other response",
                                     TRUE ~ NA_character_),
          responseX_cat3 = factor(responseX_cat3,
-                                 levels = c("other response", "think*", "believe*")),
-         response_cat = recode_factor(as.character(believe), 
-                                      "FALSE" = "other", "TRUE" = "believe"),
-         responseX_cat = recode_factor(as.character(believeX), 
+                                 levels = c("other response", "think*", "believe*"))) %>%
+  mutate(response_cat = recode_factor(as.character(believe), 
+                                      "FALSE" = "other", "TRUE" = "believe")) %>%
+  mutate(responseX_cat = recode_factor(as.character(believeX), 
                                        "FALSE" = "other", "TRUE" = "believeX")) %>%
   left_join(key2 %>% select(-question) %>% rename(question = var_name))
 
