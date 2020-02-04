@@ -6,3 +6,10 @@ data/*
 
 # ignore R files
 .DS_Store
+
+# ignore figures
+Figures/*
+*.jpeg
+*.jpg
+*.png
+*.pdf
