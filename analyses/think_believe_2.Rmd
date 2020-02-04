@@ -48,13 +48,13 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 Before we begin, it's important to note that we had unequal sample sizes by country:
 
 ```{r}
-d2_raw %>% count(thb2_ctry)
+d2_raw %>% count(thb2_ctry) %>% janitor::adorn_totals()
 ```
 
 However, `r d2_raw %>% filter(thb2_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d2_raw %>% filter(thb2_ordr == "Yes", thb2_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
 
 ```{r}
-d2 %>% count(country)
+d2 %>% count(country) %>% janitor::adorn_totals()
 ```
 
 
@@ -134,9 +134,9 @@ Note that this analysis treats responses of "think" as the same as any other non
 
 ```{r, echo = T}
 r2.1 <- lmer(believeX ~ super_cat * country 
-             # + (1 + super_cat | thb2_subj) + (1 | question), # failed to converge
-             # + (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
-             + (1 + super_cat | thb2_subj),
+             + (1 + super_cat | thb2_subj) + (1 | question), 
+             # + (1 + super_cat || thb2_subj) + (1 | question), 
+             # + (1 + super_cat | thb2_subj),
              # + (1 + super_cat || thb2_subj), 
              # + (1 | thb2_subj) + (1 | question), 
              data = d2_long)
@@ -164,6 +164,22 @@ The effects of primary interest are in bold:
 
 **Take-away: The predicted effect is evident in this dataset, as it was in Think Believe 1. It appears to be exaggerated in China and diminished in Ghana and Vanuatu, a pattern which differs from Think Believe 1.**
 
+```{r, include = F}
+# re-code to get US vs. grand mean (drop Vanuatu instead of US)
+r2.1a <- lmer(believeX ~ super_cat * country 
+             + (1 + super_cat | thb2_subj) + (1 | question), 
+             # + (1 + super_cat || thb2_subj) + (1 | question), 
+             # + (1 + super_cat | thb2_subj),
+             # + (1 + super_cat || thb2_subj), 
+             # + (1 | thb2_subj) + (1 | question), 
+             data = d2_long,
+             contrasts = list(country = "contr.sum"))
+```
+
+```{r, include = F}
+regtab_fun(r2.1a, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+```
+
 ## KW Analyses #1a-1e (by country)
 
 Next, I did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
@@ -172,7 +188,7 @@ Next, I did this same analysis within each country/langauge alone (using the mos
 # note: using most maximal common random effects structure
 r2.1_us <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
-                  # (1 + super_cat || thb2_subj) + (1 | question),
+                  # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
                   # (1 | thb2_subj) + (1 | question),
                   (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj),
@@ -191,8 +207,8 @@ r2.1_gh <- lmer(believeX ~ super_cat +
 r2.1_th <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question), # failed to converge
                   # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
-                  (1 | thb2_subj) + (1 | question),
-                  # (1 + super_cat | thb2_subj),
+                  # (1 | thb2_subj) + (1 | question),
+                  (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "Thailand"))
@@ -208,7 +224,7 @@ r2.1_ch <- lmer(believeX ~ super_cat +
 
 r2.1_vt <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
-                  # (1 + super_cat || thb2_subj) + (1 | question),
+                  # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
                   # (1 | thb2_subj) + (1 | question),
                   (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
@@ -217,11 +233,11 @@ r2.1_vt <- lmer(believeX ~ super_cat +
 ```
 
 ```{r}
-bind_rows(regtab_fun(r2.1_us) %>% mutate(Country = "US"),
-          regtab_fun(r2.1_gh) %>% mutate(Country = "Ghana"),
-          regtab_fun(r2.1_th) %>% mutate(Country = "Thailand"),
-          regtab_fun(r2.1_ch) %>% mutate(Country = "China"),
-          regtab_fun(r2.1_vt) %>% mutate(Country = "Vanuatu")) %>%
+bind_rows(regtab_fun(r2.1_us, std_beta = T) %>% mutate(Country = "US"),
+          regtab_fun(r2.1_gh, std_beta = T) %>% mutate(Country = "Ghana"),
+          regtab_fun(r2.1_th, std_beta = T) %>% mutate(Country = "Thailand"),
+          regtab_fun(r2.1_ch, std_beta = T) %>% mutate(Country = "China"),
+          regtab_fun(r2.1_vt, std_beta = T) %>% mutate(Country = "Vanuatu")) %>%
   select(Country, everything()) %>%
   regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
   collapse_rows(1)
@@ -240,8 +256,8 @@ r2.2 <- lmer(believeX ~ super_cat
              # + (1 + super_cat || country/thb2_subj) + (1 | question), # failed to converge
              # + (1 + super_cat | country/thb2_subj), # failed to converge
              # + (1 + super_cat || country/thb2_subj), # failed to converge
-             + (1 | country/thb2_subj) + (1 | question), 
-             # + (1 | country/thb2_subj), # failed to converge
+             # + (1 | country/thb2_subj) + (1 | question), # failed to converge
+             + (1 | country/thb2_subj), 
              data = d2_long)
 ```
 
@@ -260,25 +276,25 @@ The effect still holds.
 Finally, I ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. I compared these categories using planned orthogonal contrasts. 
 
 ```{r, echo = T}
-r2.3 <- lmer(believeX ~ category * country 
-             + (1 + category | thb2_subj) + (1 | question), 
-             # + (1 + category || thb2_subj) + (1 | question),
-             # + (1 + category | thb2_subj), 
-             # + (1 + category || thb2_subj), 
-             # + (1 | thb2_subj) + (1 | question),
+r2.3 <- lmer(believe ~ category2 * country 
+             # + (1 + category2 | thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 || thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 | thb1_subj), # failed to converge
+             # + (1 + category2 || thb1_subj),
+             + (1 | thb2_subj) + (1 | question),
              data = d2_long)
 ```
 
 ```{r}
-regtab_fun(r2.3, 
-           predictor_var1 = "category_relig_fact", 
+regtab_fun(r2.3, std_beta = T,
+           predictor_var1 = "category2_relig_fact", 
            predictor_name1 = "Category (Religious vs. fact)",
-           predictor_var2 = "category_relig_C_B",
-           predictor_name2 = "Category (Christian vs. Buddhist religious)",
-           predictor_var3 = "category_fact_WE_L",
-           predictor_name3 = "Category (well-known & esoteric vs. personal fact)",
-           predictor_var4 = "category_fact_W_E",
-           predictor_name4 = "Category (well-known vs. esoteric fact)") %>% 
+           predictor_var2 = "category2_relig_local_other",
+           predictor_name2 = "Category (local vs. other religious)",
+           predictor_var3 = "category2_fact_W_EL",
+           predictor_name3 = "Category (well-known vs. esoteric & personal life fact)",
+           predictor_var4 = "category2_fact_E_L",
+           predictor_name4 = "Category (esoteric vs. personal life fact)") %>% 
   regtab_style_fun(row_emph = c(2:5, 10:25)) %>%
   group_rows("Intercept", start_row = 1, end_row = 1) %>%
   group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
@@ -290,18 +306,18 @@ regtab_fun(r2.3,
 ```
 
 ```{r, include = F}
-regtab_ran_fun(r2.3, subj_var = "thb2_subj") %>% regtab_style_fun()
+regtab_ran_fun(r1.3, subj_var = "thb1_subj") %>% regtab_style_fun()
 ```
 
-The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religoius vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to write "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and Vanuatu, and exaggerated in China.
+The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religious vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and Vanuatu, and exaggerated in China.
 
-The second orthogonal contrast compared Christian to Buddhist "religious" questions. Overall, participants were more likely to write "believe" for Christian questions, and this tendency was exaggerated in Vanuatu and diminished in Thailand (partially echoing Think Believe 1).
+The second orthogonal contrast compared local to other "religious" questions (crudely defining "local" as Christian for participants in the US, Ghana, and Vanuatu, and Buddhist for participants in Thailand and China). Overall, participants were more likely to circle "believe" for religious questions from a local religion, and this tendency was exaggerated in Vanuatu (a predominantly Christian samples) and diminished in China (an overwhelmingly non-religious sample).
 
-The third orthogonal contrast compared well-known and esoteric facts, on the one hand, to personal facts, on the other. Overall, there was no reliable difference in rates of "believe" between these groups of questions (in contrast to Think Believe 1, in which participants were more likely to circle "believe" for well-known and esoteric facts). This difference did not vary by country.
+The third orthogonal contrast compared well-known facts, on the one hand, to esoteric and personal facts, on the other. Overall, participants were no more or less likely to circle "believe" in either case.
 
-The fourth orthogonal contrast compared well-known to esoteric facts.  Overall, there was no reliable difference in rates of "believe" between these groups of questions (in contrast to Think Believe 1, in which participants were more likely to circle "believe" for well-known facts). This difference did not vary by country.
+The fourth orthogonal contrast compared esoteric to personal life facts. Overall, particpants were no more or less likely to circle "believe" in either case.
 
-Note that these findings statistically control for differences across samples in the overall rate of writing "believe" (which was generally lower in Ghana).
+Note that these findings statistically control for differences across samples in the overall rate of circling "believe" (which was generally higher in Ghana and lower in Thailand).
 
 
 # Analysis: Based on preregistration
@@ -450,6 +466,39 @@ d2_long %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
   labs(x = "response", y = "proportion", fill = "response type")
+```
+
+```{r, fig.width = 6, fig.asp = 0.3, include = F}
+# version for cogsci 2020 submission
+four_cols2 <- c(gg_color_hue(2), "khaki", "gray")
+d2_long %>%
+  filter(response_lemma2 %in% top_words$response_lemma2) %>%
+  count(country, super_cat, #category, 
+        response_lemma2) %>%
+  complete(response_lemma2, nesting(country, super_cat), fill = list(n = 0)) %>%
+  arrange(super_cat, #category, 
+          country, desc(n)) %>%
+  group_by(country, super_cat) %>% #, category) %>%
+  mutate(proportion = round(n/sum(n), 2)) %>%
+  ungroup() %>%
+  mutate(response_lemma2 = reorder(response_lemma2, desc(n)),
+         response_color = case_when(response_lemma2 == "think" ~ "think",
+                                    response_lemma2 == "believe" ~ "believe",
+                                    response_lemma2 == "know" ~ "know",
+                                    TRUE ~ "other"),
+         response_color = factor(response_color,
+                                 levels = c("think", "believe", "know", "other"))) %>%
+                                 # levels = c("other", "know", "think", "believe"))) %>%
+  left_join(top_words %>% select(response_lemma2, order)) %>%
+  ggplot(aes(x = reorder(response_lemma2, order), 
+             y = proportion, fill = response_color)) +
+  facet_grid(super_cat ~ country) +
+  geom_bar(stat = "identity", alpha = 0.7, color = "black", size = 0.1) +
+  scale_fill_manual(values = four_cols2) +
+  scale_y_continuous(labels = scales::percent) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "Response", y = "Percent of responses", fill = "Response type")
 ```
 
 ```{r}

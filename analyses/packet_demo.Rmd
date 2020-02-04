@@ -13,6 +13,7 @@ source("./scripts/var_recode_contrast.R")
 # thb1 included in packet 4
 demo_p4 <- read_excel("../../../Self other/data/SelfOther_January 22, 2019.xlsx", 
                       sheet = 1) %>%
+  filter(soth_batc == "First") %>% # remove duplicates
   select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
   rename(country = soth_ctry) %>%
   filter(country %in% levels_country) %>%
@@ -32,6 +33,7 @@ demo_p4 <- read_excel("../../../Self other/data/SelfOther_January 22, 2019.xlsx"
 ```{r}
 # thb2 included in packet 5
 demo_p5 <- read_excel("../../../Taves experiences/data/Taves_full_dataset_sheet5.xlsx") %>%
+  filter(taves_batc == "First") %>% # remove duplicates
   rename_at(vars(taves_emon, taves_fait, taves_noex),
             funs(gsub("taves_", "taves_demo_", .))) %>%
   select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
@@ -75,6 +77,7 @@ demo_p5 <- read_excel("../../../Taves experiences/data/Taves_full_dataset_sheet5
 ```{r}
 # thb3 included in packet 6
 demo_p6 <- read_excel("../../../Spontaneous thought/data/Complete and cleaned dataset_Spon Thought_Jan.23.2018.xlsx", sheet = 2) %>%
+  filter(spon_batc == "First") %>% # remove duplicates
   select(contains("_subj"), contains("_ctry"), contains("demo_")) %>%
   rename(country = spon_ctry) %>%
   mutate(country = factor(country, 
@@ -92,8 +95,14 @@ demo_p6 <- read_excel("../../../Spontaneous thought/data/Complete and cleaned da
 ```
 
 ```{r}
+set.seed(1234)
+
 # put em all together and what do you get
 demo_p456 <- full_join(demo_p4, demo_p5) %>% full_join(demo_p6) %>%
+  # remove duplicates if participants completed more than one survey packet
+  mutate(rand = runif(nrow(.), 0, 999999)) %>%
+  top_n(1, rand) %>%
+  distinct() %>%
   mutate(religion = case_when(
     demo_rlgn %in% c("Agnostic",
                      "Agnostic (Was Baptist growing up)",

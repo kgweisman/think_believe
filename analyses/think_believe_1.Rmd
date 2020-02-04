@@ -44,13 +44,18 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 Before we begin, it's important to note that we had unequal sample sizes by country:
 
 ```{r}
-d1_raw %>% count(thb1_ctry)
+d1_raw %>% 
+  filter(thb1_ctry %in% levels_country) %>% 
+  count(thb1_ctry) %>% 
+  janitor::adorn_totals()
 ```
 
-However, `r d1_raw %>% filter(thb1_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d1_raw %>% filter(thb1_ordr == "Yes", thb1_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
+However, `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "Yes", thb1_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
 
 ```{r}
-d1 %>% count(country)
+d1 %>% 
+  count(country) %>% 
+  janitor::adorn_totals()
 ```
 
 
@@ -76,12 +81,30 @@ d1_long %>%
   labs(x = "category", y = "proportion", fill = "response")
 ```
 
+```{r, fig.width = 2.8, fig.asp = 0.5}
+# version for cogsci 2020 submission
+d1_long %>%
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = super_cat, 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(. ~ country_n, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "Question type", y = "Percent of responses", fill = "Response")
+```
+
 ## By category
 
 ```{r, fig.width = 3, fig.asp = 0.5}
 d1_long %>%
   left_join(sample_size_d1) %>%
-  ggplot(aes(x = category, 
+  ggplot(aes(x = category2, 
              # put NAs on top of bar
              fill = factor(response_cat,
                            levels = c(NA, "think", "believe"), 
@@ -126,9 +149,9 @@ First, I used a mixed effects logistic regression predicting how likely a partic
 
 ```{r, echo = T}
 r1.1 <- lmer(believe ~ super_cat * country 
-             # + (1 + super_cat | thb1_subj) + (1 | question), # failed to converge
-             # + (1 + super_cat || thb1_subj) + (1 | question), # failed to converge
-             + (1 | thb1_subj) + (1 | question),
+             + (1 + super_cat | thb1_subj) + (1 | question), 
+             # + (1 + super_cat || thb1_subj) + (1 | question), 
+             # + (1 | thb1_subj) + (1 | question),
              data = d1_long)
 ```
 
@@ -153,6 +176,20 @@ The effects of primary interest are in bold:
 - **Category (religious) x Country (Vt.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in Vanuatu than in other countries.
 
 **Take-away: The predicted effect is evident in this dataset. It appears to be exaggerated in Thailand and diminished in Ghana.**
+
+```{r, include = F}
+# re-code to get US vs. grand mean (drop Vanuatu instead of US)
+r1.1a <- lmer(believe ~ super_cat * country 
+             + (1 + super_cat | thb1_subj) + (1 | question), 
+             # + (1 + super_cat || thb1_subj) + (1 | question), 
+             # + (1 | thb1_subj) + (1 | question),
+             data = d1_long,
+             contrasts = list(country = "contr.sum"))
+```
+
+```{r, include = F}
+regtab_fun(r1.1a, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+```
 
 ## KW Analyses #1a-1e (by country)
 
@@ -197,11 +234,11 @@ r1.1_vt <- lmer(believe ~ super_cat +
 ```
 
 ```{r}
-bind_rows(regtab_fun(r1.1_us) %>% mutate(Country = "US"),
-          regtab_fun(r1.1_gh) %>% mutate(Country = "Ghana"),
-          regtab_fun(r1.1_th) %>% mutate(Country = "Thailand"),
-          regtab_fun(r1.1_ch) %>% mutate(Country = "China"),
-          regtab_fun(r1.1_vt) %>% mutate(Country = "Vanuatu")) %>%
+bind_rows(regtab_fun(r1.1_us, std_beta = T) %>% mutate(Country = "US"),
+          regtab_fun(r1.1_gh, std_beta = T) %>% mutate(Country = "Ghana"),
+          regtab_fun(r1.1_th, std_beta = T) %>% mutate(Country = "Thailand"),
+          regtab_fun(r1.1_ch, std_beta = T) %>% mutate(Country = "China"),
+          regtab_fun(r1.1_vt, std_beta = T) %>% mutate(Country = "Vanuatu")) %>%
   select(Country, everything()) %>%
   regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
   collapse_rows(1)
@@ -238,25 +275,25 @@ The effect still holds.
 Finally, I ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. I compared these categories using planned orthogonal contrasts.
 
 ```{r, echo = T}
-r1.3 <- lmer(believe ~ category * country 
-             # + (1 + category | thb1_subj) + (1 | question), # failed to converge
-             # + (1 + category || thb1_subj) + (1 | question), # failed to converge
-             # + (1 + category | thb1_subj), # failed to converge
-             # + (1 + category || thb1_subj), 
+r1.3 <- lmer(believe ~ category2 * country 
+             # + (1 + category2 | thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 || thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 | thb1_subj), # failed to converge
+             # + (1 + category2 || thb1_subj),
              + (1 | thb1_subj) + (1 | question),
              data = d1_long)
 ```
 
 ```{r}
-regtab_fun(r1.3, 
-           predictor_var1 = "category_relig_fact", 
+regtab_fun(r1.3, std_beta = T,
+           predictor_var1 = "category2_relig_fact", 
            predictor_name1 = "Category (Religious vs. fact)",
-           predictor_var2 = "category_relig_C_B",
-           predictor_name2 = "Category (Christian vs. Buddhist religious)",
-           predictor_var3 = "category_fact_WE_L",
-           predictor_name3 = "Category (well-known & esoteric vs. personal fact)",
-           predictor_var4 = "category_fact_W_E",
-           predictor_name4 = "Category (well-known vs. esoteric fact)") %>% 
+           predictor_var2 = "category2_relig_local_other",
+           predictor_name2 = "Category (local vs. other religious)",
+           predictor_var3 = "category2_fact_W_EL",
+           predictor_name3 = "Category (well-known vs. esoteric & personal life fact)",
+           predictor_var4 = "category2_fact_E_L",
+           predictor_name4 = "Category (esoteric vs. personal life fact)") %>% 
   regtab_style_fun(row_emph = c(2:5, 10:25)) %>%
   group_rows("Intercept", start_row = 1, end_row = 1) %>%
   group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
@@ -271,13 +308,13 @@ regtab_fun(r1.3,
 regtab_ran_fun(r1.3, subj_var = "thb1_subj") %>% regtab_style_fun()
 ```
 
-The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religoius vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and exaggerated in Thailand.
+The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religious vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and exaggerated in Thailand.
 
-The second orthogonal contrast compared Christian to Buddhist "religious" questions. Overall, participants were more likely to circle "believe" for Christian questions, and this tendency was exaggerated in Ghana and Vanuatu (which were predominantly Christian samples) and diminished in Thailand and China (which were more Buddhist samples).
+The second orthogonal contrast compared local to other "religious" questions (crudely defining "local" as Christian for participants in the US, Ghana, and Vanuatu, and Buddhist for participants in Thailand and China). Overall, participants were more likely to circle "believe" for religious questions from a local religion, and this tendency was exaggerated in Ghana and Vanuatu (which were predominantly Christian samples) and diminished in China (which was an overwhelmingly non-religious sample).
 
-The third orthogonal contrast compared well-known and esoteric facts, on the one hand, to personal facts, on the other. Overall, participants were more likely to circle "believe" for well-known and esoteric facts, and this tendency was diminished in Ghana and China, and exaggerated in Thailand and Vanuatu.
+The third orthogonal contrast compared well-known facts, on the one hand, to esoteric and personal facts, on the other. Overall, participants were more likely to circle "believe" for well-known facts, and this tendency was diminished in China, and exaggerated in Vanuatu.
 
-The fourth orthogonal contrast compared well-known to esoteric facts. Overall, particpants were more likely to circle "believe" for well-known factrs, and then tendency was diminished in China, and exaggerated in Vanuatu.
+The fourth orthogonal contrast compared esoteric to personal life facts. Overall, particpants were no more or less likely to circle "believe" in either case (but this varied across sites).
 
 Note that these findings statistically control for differences across samples in the overall rate of circling "believe" (which was generally higher in Ghana and lower in Thailand).
 

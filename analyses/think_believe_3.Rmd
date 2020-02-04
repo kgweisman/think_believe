@@ -44,13 +44,13 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 Before we begin, it's important to note that we had unequal sample sizes by country:
 
 ```{r}
-d3_raw %>% count(thb3_ctry)
+d3_raw %>% count(thb3_ctry) %>% janitor::adorn_totals()
 ```
 
 However, `r d3_raw %>% filter(thb3_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d3_raw %>% filter(thb3_ordr == "Yes", thb3_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
 
 ```{r}
-d3 %>% count(country)
+d3 %>% count(country) %>% janitor::adorn_totals()
 ```
 
 
@@ -74,6 +74,25 @@ d3_long %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
   labs(x = "category", y = "proportion", fill = "response")
+```
+
+```{r, fig.width = 2.8, fig.asp = 0.5}
+# version for cogsci 2020 submission
+d3_long %>%
+  left_join(sample_size_d1) %>%
+  ggplot(aes(x = factor(super_cat, 
+                        labels = c("relig.", "scientific")), 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(. ~ country_n, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "Vignette type", y = "Percent of responses", fill = "Response")
 ```
 
 ## By question
@@ -138,6 +157,22 @@ The effects of primary interest are in bold:
 
 **Take-away: The predicted effect is evident in this dataset. It appears to be exaggerated in Thailand and diminished in Ghana.**
 
+```{r, include = F}
+# re-code to get US vs. grand mean (drop Vanuatu instead of US)
+r3.1a <- lmer(believe ~ super_cat * country 
+             # + (1 + super_cat | thb3_subj) + (1 | question), # failed to converge
+             # + (1 + super_cat || thb3_subj) + (1 | question), # failed to converge
+             # + (1 + super_cat | thb3_subj), # failed to converge
+             # + (1 + super_cat || thb3_subj), # failed to converge
+             + (1 | thb3_subj) + (1 | question),
+             data = d3_long,
+             contrasts = list(country = "contr.sum"))
+```
+
+```{r, include = F}
+regtab_fun(r3.1a, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+```
+
 ## KW Analyses #1a-1e (by country)
 
 Next, I did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
@@ -181,11 +216,11 @@ r3.1_vt <- lmer(believe ~ super_cat +
 ```
 
 ```{r}
-bind_rows(regtab_fun(r3.1_us) %>% mutate(Country = "US"),
-          regtab_fun(r3.1_gh) %>% mutate(Country = "Ghana"),
-          regtab_fun(r3.1_th) %>% mutate(Country = "Thailand"),
-          regtab_fun(r3.1_ch) %>% mutate(Country = "China"),
-          regtab_fun(r3.1_vt) %>% mutate(Country = "Vanuatu")) %>%
+bind_rows(regtab_fun(r3.1_us, std_beta = T) %>% mutate(Country = "US"),
+          regtab_fun(r3.1_gh, std_beta = T) %>% mutate(Country = "Ghana"),
+          regtab_fun(r3.1_th, std_beta = T) %>% mutate(Country = "Thailand"),
+          regtab_fun(r3.1_ch, std_beta = T) %>% mutate(Country = "China"),
+          regtab_fun(r3.1_vt, std_beta = T) %>% mutate(Country = "Vanuatu")) %>%
   select(Country, everything()) %>%
   regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
   collapse_rows(1)

@@ -45,6 +45,7 @@ d1_raw <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = "V1&V2 no du
   group_by(thb1_subj) %>%
   top_n(1, thb1_batc) %>% 
   ungroup() %>%
+  filter(thb1_ctry %in% levels_country) %>%
   mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country))
 
 # make question key
@@ -312,13 +313,28 @@ d1_long <- d1 %>%
                                   think == T ~ "think",
                                   TRUE ~ NA_character_),
          response_cat = factor(response_cat, levels = c("think", "believe"))) %>%
-  left_join(key1 %>% select(-question) %>% rename(question = var_name))
+  left_join(key1 %>% select(-question) %>% rename(question = var_name)) %>%
+  mutate(category2 = case_when(
+    grepl("fact", category) ~ as.character(category),
+    grepl("Christian", category) & 
+      thb1_ctry %in% c("US", "Ghana", "Vanuatu") ~ "local religious",
+    grepl("Buddhist", category) & 
+      thb1_ctry %in% c("Thailand", "China") ~ "local religious",
+    grepl("Christian", category) &
+      thb1_ctry %in% c("Thailand", "China") ~ "other religious",
+    grepl("Buddhist", category) &
+      thb1_ctry %in% c("US", "Ghana", "Vanuatu") ~ "other religious",
+                               TRUE ~ NA_character_),
+         category2 = factor(category2,
+                            levels = c("local religious", "other religious",
+                                       "well-known fact", "esoteric fact", 
+                                       "life fact")))
 
 # implement exclusion criteria, rename country variable, and add demo variables
 d1 <- d1 %>% 
   filter(thb1_ordr == "Yes", thb1_attn == "Pass") %>%
   rename(country = thb1_ctry) %>%
-  left_join(demo_p456 %>% select(-country), by = c("thb1_subj" = "subj"))
+  left_join(demo_p456 %>% select(-country) %>% distinct(), by = c("thb1_subj" = "subj"))
 
 d1_long <- d1_long %>% 
   filter(thb1_ordr == "Yes", thb1_attn == "Pass") %>%
@@ -330,6 +346,7 @@ contrasts(d1$country) = contrast_country
 contrasts(d1_long$country) = contrast_country
 # contrasts(d1_long$category) = contrast_category
 contrasts(d1_long$category) = contrast_category_orth
+contrasts(d1_long$category2) = contrast_category2_orth
 contrasts(d1_long$super_cat) = contrast_super_cat
 
 # make sample size df
@@ -348,6 +365,7 @@ d2_raw <- read_xlsx("../data/ThinkBelieve2_organized.xlsx", sheet = "V1&V2 no du
   group_by(thb2_subj) %>%
   top_n(1, thb2_batc) %>% 
   ungroup() %>%
+  filter(thb2_ctry %in% levels_country) %>%
   mutate(thb2_ctry = factor(thb2_ctry, levels = levels_country))
 
 # make question key
@@ -780,7 +798,22 @@ d2_long <- d2 %>%
                                       "FALSE" = "other", "TRUE" = "believe")) %>%
   mutate(responseX_cat = recode_factor(as.character(believeX), 
                                        "FALSE" = "other", "TRUE" = "believeX")) %>%
-  left_join(key2 %>% select(-question) %>% rename(question = var_name))
+  left_join(key2 %>% select(-question) %>% rename(question = var_name)) %>%
+  mutate(category2 = case_when(
+    grepl("fact", category) ~ as.character(category),
+    grepl("Christian", category) & 
+      thb2_ctry %in% c("US", "Ghana", "Vanuatu") ~ "local religious",
+    grepl("Buddhist", category) & 
+      thb2_ctry %in% c("Thailand", "China") ~ "local religious",
+    grepl("Christian", category) &
+      thb2_ctry %in% c("Thailand", "China") ~ "other religious",
+    grepl("Buddhist", category) &
+      thb2_ctry %in% c("US", "Ghana", "Vanuatu") ~ "other religious",
+    TRUE ~ NA_character_),
+    category2 = factor(category2,
+                       levels = c("local religious", "other religious",
+                                  "well-known fact", "esoteric fact", 
+                                  "life fact")))
 
 # implement exclusion criteria, rename country variable, and add demo variables
 d2 <- d2 %>% 
@@ -798,6 +831,7 @@ contrasts(d2$country) = contrast_country
 contrasts(d2_long$country) = contrast_country
 # contrasts(d2_long$category) = contrast_category
 contrasts(d2_long$category) = contrast_category_orth
+contrasts(d2_long$category2) = contrast_category2_orth
 contrasts(d2_long$super_cat) = contrast_super_cat
 
 # make sample size df
@@ -816,6 +850,7 @@ d3_raw <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = "V1 & V2 no 
   group_by(thb3_subj) %>%
   top_n(1, thb3_batc) %>% 
   ungroup() %>%
+  filter(thb3_ctry %in% levels_country) %>%
   mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country))
 
 # make question key

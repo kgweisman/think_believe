@@ -19,3 +19,8 @@ contrast_category_orth <- cbind("_relig_fact" = c(3, 3, -2, -2, -2),
                                 "_relig_C_B" = c(1, -1, 0, 0, 0),
                                 "_fact_WE_L" = c(0, 0, 1, 1, -2),
                                 "_fact_W_E" = c(0, 0, 1, -1, 0))
+
+contrast_category2_orth <- cbind("_relig_fact" = c(3, 3, -2, -2, -2),
+                                 "_relig_local_other" = c(1, -1, 0, 0, 0),
+                                 "_fact_W_EL" = c(0, 0, 2, -1, -1),
+                                 "_fact_E_L" = c(0, 0, 0, 1, -1))
