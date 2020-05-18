@@ -1,11 +1,18 @@
 # levels
 levels_country <- c("US", "Ghana", "Thailand", "China", "Vanuatu")
+levels_country6 <- c("US", "Ghana", "Ghana (undergrads)", "Thailand", "China", "Vanuatu")
 
 # contrasts (effect-coding)
 contrast_country <- cbind("_gh" = c(-1, 1, 0, 0, 0),
                            "_th" = c(-1, 0, 1, 0, 0),
                            "_ch" = c(-1, 0, 0, 1, 0),
                            "_vt" = c(-1, 0, 0, 0, 1))
+
+contrast_country6 <- cbind("_gh" = c(-1, 1, 0, 0, 0, 0),
+                           "_gh2" = c(-1, 0, 1, 0, 0, 0),
+                           "_th" = c(-1, 0, 0, 1, 0, 0),
+                           "_ch" = c(-1, 0, 0, 0, 1, 0),
+                           "_vt" = c(-1, 0, 0, 0, 0, 1))
 
 contrast_category <- cbind("_RC" = c(1, 0, 0, 0, -1),
                            "_RB" = c(0, 1, 0, 0, -1),

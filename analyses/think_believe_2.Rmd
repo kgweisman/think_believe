@@ -306,7 +306,7 @@ regtab_fun(r2.3, std_beta = T,
 ```
 
 ```{r, include = F}
-regtab_ran_fun(r1.3, subj_var = "thb1_subj") %>% regtab_style_fun()
+regtab_ran_fun(r2.3, subj_var = "thb1_subj") %>% regtab_style_fun()
 ```
 
 The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religious vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and Vanuatu, and exaggerated in China.
@@ -345,9 +345,9 @@ Here is the first preregistered analyis: a 5 (country) x 2 (question category) m
 ```{r, echo = T}
 r2.4 <- d2_anova %>%
   anova_test(dv = prop_believeX, 
-             wid = thb2_subj, 
-             between = country, 
-             within = super_cat)
+                      wid = thb2_subj, 
+                      between = country, 
+                      within = super_cat)
 
 get_anova_table(r2.4)
 ```
@@ -468,7 +468,7 @@ d2_long %>%
   labs(x = "response", y = "proportion", fill = "response type")
 ```
 
-```{r, fig.width = 6, fig.asp = 0.3, include = F}
+```{r, fig.width = 6, fig.asp = 0.4, include = T}
 # version for cogsci 2020 submission
 four_cols2 <- c(gg_color_hue(2), "khaki", "gray")
 d2_long %>%
@@ -487,7 +487,8 @@ d2_long %>%
                                     response_lemma2 == "know" ~ "know",
                                     TRUE ~ "other"),
          response_color = factor(response_color,
-                                 levels = c("think", "believe", "know", "other"))) %>%
+                                 # levels = c("think", "believe", "know", "other"))) %>%
+                                 levels = c("know", "think", "believe", "other"))) %>%
                                  # levels = c("other", "know", "think", "believe"))) %>%
   left_join(top_words %>% select(response_lemma2, order)) %>%
   ggplot(aes(x = reorder(response_lemma2, order), 

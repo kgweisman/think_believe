@@ -845,13 +845,17 @@ sample_size_d2 <- d2 %>%
 # think believe 3 (forced choice, controlled content) -----
 
 # load raw data
-d3_raw <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = "V1 & V2 no dupes") %>%
+d3_raw <- read_xlsx("../data/ThinkBelieve3_organized_updated_02.21.2020.xlsx", sheet = "V1 & V2 no dupes") %>%
+  # identify second sample from Ghana
+  mutate(thb3_ctry = case_when(
+    grepl("2020", as.character(thb3_2day)) ~ "Ghana (undergrads)",
+    TRUE ~ thb3_ctry)) %>%
   # ensure no duplicates
   group_by(thb3_subj) %>%
   top_n(1, thb3_batc) %>% 
   ungroup() %>%
-  filter(thb3_ctry %in% levels_country) %>%
-  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country))
+  filter(thb3_ctry %in% levels_country6) %>%
+  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country6))
 
 # make question key
 key3 <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = 1)[1,] %>% 
@@ -892,8 +896,8 @@ key3 <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = 1)[1,] %>%
 
 # clean up variables
 d3 <- d3_raw %>%
-  filter(thb3_ctry %in% levels_country) %>%
-  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country),
+  filter(thb3_ctry %in% levels_country6) %>%
+  mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country6),
          thb3_demo_sex = factor(thb3_demo_sex,
                                 levels = c("Male", "Female", "Other")), 
          thb3_demo_age = as.numeric(as.character(thb3_demo_age))) %>%
@@ -1117,8 +1121,8 @@ d3_long <- d3_long %>%
   left_join(demo_p456 %>% select(-country), by = c("thb3_subj" = "subj"))
 
 # set contrasts
-contrasts(d3$country) = contrast_country
-contrasts(d3_long$country) = contrast_country
+contrasts(d3$country) = contrast_country6
+contrasts(d3_long$country) = contrast_country6
 # contrasts(d3_long$category) = contrast_category
 contrasts(d3_long$category) = contrast_super_cat # edit if needed later
 contrasts(d3_long$super_cat) = contrast_super_cat

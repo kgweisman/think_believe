@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = F, message = F)
 
 In this notebook we analyze the third "think/believe" task, in which participants completed a series of closey matched fill-in-the-blanks by choosing between two options: "think" and "believe."
 
+As of 2020-02-24, this file includes analysis of the new dataset collected in Ghana in Winter 2020 (a sample of English-speaking undergraduates).
+
 
 ```{r}
 source("./scripts/dependencies.R")
@@ -60,7 +62,7 @@ We'll begin by plotting responses of "think" (red) vs. "believe" (turquoise) to 
 
 ## By category
 
-```{r, fig.width = 3, fig.asp = 0.5}
+```{r, fig.width = 6, fig.asp = 0.4}
 d3_long %>%
   left_join(sample_size_d3) %>%
   ggplot(aes(x = category, 
@@ -97,7 +99,7 @@ d3_long %>%
 
 ## By question
 
-```{r, fig.width = 6, fig.asp = 0.7}
+```{r, fig.width = 6, fig.asp = 1.2}
 d3_long %>%
   left_join(sample_size_d3) %>%
   ggplot(aes(x = reorder(str_wrap(question_text_short, 40), order), 
@@ -114,6 +116,25 @@ d3_long %>%
   labs(x = "category", y = "proportion", fill = "response")
 ```
 
+Replotted to highlight pairings of questions
+
+```{r, fig.width = 6, fig.asp = 1.2}
+d3_long %>%
+  left_join(sample_size_d3) %>%
+  ggplot(aes(x = category, 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(country_n ~ reorder(str_wrap(question_text_short, 30), order), 
+             scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top",
+        plot.margin = (unit(c(0.2, 0.2, 0.2, 1.8), "cm"))) +
+  labs(x = "category", y = "proportion", fill = "response")
+```
 
 # Analysis: KW without looking at preregistration
 
@@ -136,7 +157,7 @@ r3.1 <- lmer(believe ~ super_cat * country
 ```
 
 ```{r}
-regtab_fun(r3.1, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+regtab_fun(r3.1, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 8:12))
 ```
 
 ```{r, include = F}
@@ -146,11 +167,13 @@ regtab_ran_fun(r3.1, subj_var = "thb3_subj") %>% regtab_style_fun()
 The effects of primary interest are in bold:
 
 - **Category (religious)**: Collapsing across countries/languages, participants were indeed more likely to say "believe" for "religious" questions, echoing Think Believe 1 and 2. 
-- Country (Gh.): Participants in Ghana were generally more likely than other participants to say "believe," collapsing across question categories, echoing Think Believe 1 and 2
+- Country (Gh.): Participants in Ghana were generally more likely than other participants to say "believe," collapsing across question categories, echoing Think Believe 1 and 2.
+- Country (Gh.)2: Participants in the second sample from Ghana were generally less likely than other participants to say "believe," collapsing across question categories.
 - Country (Th.): Participants in Thailand no more or less likely than other participants to say "believe," collapsing across question categories.
 - Country (Ch.): Participants in China were no more or less likely than other participants to say "believe," collapsing across question categories.
 - Country (Vt.): Participants in Vanuatu were no more or less likely than other participants to say "believe," collapsing across question categories.
 - **Category (religious) x Country (Gh.)**: The difference in rates of "believe" responses between question categories was smaller in Ghana than in other countries, echoing Think Believe 1 and 2 -- in fact, in this study, it appears to have been reduced to zero (more on this below).
+- **Category (religious) x Country (Gh.)2**: The difference in rates of "believe" responses between question categories was no smaller or larger in the second sample from Ghana than in other countries.
 - **Category (religious) x Country (Th.)**: The difference in rates of "believe" responses between question categories was larger in Thailand than in other countries, echoing Think Believe 1 (but not Think Believe 2).
 - **Category (religious) x Country (Ch.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in China than in other countries.
 - **Category (religious) x Country (Vt.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in Vanuatu than in other countries.
@@ -193,6 +216,13 @@ r3.1_gh <- lmer(believe ~ super_cat +
                 # (1 + super_cat | thb3_subj),
                 data = d3_long %>% filter(country == "Ghana"))
 
+r3.1_gh2 <- lmer(believe ~ super_cat + 
+                  (1 + super_cat | thb3_subj) + (1 | question),
+                # (1 + super_cat || thb3_subj) + (1 | question), 
+                # (1 | thb3_subj) + (1 | question),
+                # (1 + super_cat | thb3_subj),
+                data = d3_long %>% filter(country == "Ghana (undergrads)"))
+
 r3.1_th <- lmer(believe ~ super_cat + 
                   (1 + super_cat | thb3_subj) + (1 | question),
                 # (1 + super_cat || thb3_subj) + (1 | question), # failed to converge
@@ -218,15 +248,16 @@ r3.1_vt <- lmer(believe ~ super_cat +
 ```{r}
 bind_rows(regtab_fun(r3.1_us, std_beta = T) %>% mutate(Country = "US"),
           regtab_fun(r3.1_gh, std_beta = T) %>% mutate(Country = "Ghana"),
+          regtab_fun(r3.1_gh2, std_beta = T) %>% mutate(Country = "Ghana (undergrads)"),
           regtab_fun(r3.1_th, std_beta = T) %>% mutate(Country = "Thailand"),
           regtab_fun(r3.1_ch, std_beta = T) %>% mutate(Country = "China"),
           regtab_fun(r3.1_vt, std_beta = T) %>% mutate(Country = "Vanuatu")) %>%
   select(Country, everything()) %>%
-  regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
+  regtab_style_fun(row_emph = seq(2, 12, 2)) %>%
   collapse_rows(1)
 ```
 
-The effects of primary interest are in bold, and **the take-away is fairly clear: In every country/language EXCEPT for Ghana/Fante, participants were more likely to say "believe" in "religious" questions than in "fact" questions**.
+The effects of primary interest are in bold, and **the take-away is fairly clear: In every country/language EXCEPT for Ghana/Fante, participants were more likely to say "believe" in "religious" questions than in "fact" questions**. Frustratingly, the second sample from Ghana is kind of in between -- the effect is in the predicted direction, but the p-value is just shy of significance... but it's also a smaller sample than others.
 
 
 ## KW Analysis #2
@@ -235,10 +266,10 @@ In this analysis, I treated country/language as a random rather than fixed effec
 
 ```{r, echo = T}
 r3.2 <- lmer(believe ~ super_cat 
-             + (1 + super_cat | country/thb3_subj) + (1 | question), 
+             # + (1 + super_cat | country/thb3_subj) + (1 | question), 
              # + (1 + super_cat || country/thb3_subj) + (1 | question), # failed to converge
              # + (1 + super_cat | country/thb3_subj), # failed to converge
-             # + (1 | country/thb3_subj) + (1 | question),
+             + (1 | country/thb3_subj) + (1 | question),
              data = d3_long)
 ```
 
@@ -267,7 +298,7 @@ d3_anova <- d3_long %>%
   ungroup() %>%
   mutate(thb3_subj = factor(thb3_subj))
 
-contrasts(d3_anova$country) <- contrast_country
+contrasts(d3_anova$country) <- contrast_country6
 contrasts(d3_anova$super_cat) <- contrast_super_cat
 ```
 
@@ -310,6 +341,9 @@ r3.5b_us <- t.test(prop_believe ~ super_cat, paired = T,
 r3.5b_gh <- t.test(prop_believe ~ super_cat, paired = T,
                    d3_anova %>% filter(country == "Ghana")); r3.5b_gh
 
+# Ghana (undergrads)
+r3.5b_gh2 <- t.test(prop_believe ~ super_cat, paired = T,
+                   d3_anova %>% filter(country == "Ghana (undergrads)")); r3.5b_gh2
 
 # Thailand
 r3.5b_th <- t.test(prop_believe ~ super_cat, paired = T,
@@ -324,6 +358,6 @@ r3.5b_vt <- t.test(prop_believe ~ super_cat, paired = T,
                    d3_anova %>% filter(country == "Vanuatu")); r3.5b_vt
 ```
 
-**The difference between question categories was significant in each country/language considered alone, EXCEPT Ghana/Fante.**
+**The difference between question categories was significant in each country/language considered alone, EXCEPT Ghana/Fante (first sample).**
 
 

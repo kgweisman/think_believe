@@ -62,21 +62,13 @@ regtab_fun <- function(reg,
   }
   
   if (std_beta) {
-    beta_std <- std_beta(reg, type = "std")
-    beta_std2 <- std_beta(reg, type = "std2") %>%
-      # correct inconsistencies in naming between std and std2
-      mutate(term = gsub("site_rural", "site", term),
-             term = gsub("religion_char", "religion", term),
-             term = gsub("spirit_scale1", "spirit_scale", term),
-             term = gsub("site", "site_rural", term),
-             term = gsub("religion", "religion_char", term),
-             term = gsub("spirit_scale", "spirit_scale1", term))
+    beta_std <- effectsize::standardize_parameters(reg, two_sd = F)
+    beta_std2 <- effectsize::standardize_parameters(reg, two_sd = T)
     
-    beta_df <- beta_std %>% select(term, std.estimate) %>%
-      rename("β'" = std.estimate) %>%
-      left_join(beta_std2 %>% select(term, std.estimate) %>%
-                  rename("β''" = std.estimate)) %>%
-      rename(Parameter = term) %>%
+    beta_df <- beta_std %>% select(Parameter, Std_Coefficient) %>%
+      rename("β'" = Std_Coefficient) %>%
+      left_join(beta_std2 %>% select(Parameter, Std_Coefficient) %>%
+                  rename("β''" = Std_Coefficient)) %>%
       mutate_at(vars(starts_with("β")), 
                 funs(format(round(., 2), nsmall = 2)))
     
@@ -275,14 +267,14 @@ beta_fun <- function(reg, find_name = " ", replace_name = " "){
   res_tab <- res_tab1 %>%
     data.frame() %>%
     rename(β = ".") %>%
-    rownames_to_column("term") %>%
-    full_join(std_beta(reg, type = "std") %>%
-                select(term, std.estimate) %>%
-                rename("β'" = std.estimate)) %>%
-    full_join(std_beta(reg, type = "std2") %>% 
-                select(term, std.estimate) %>%
-                rename("β''" = std.estimate) %>%
-                mutate(term = gsub(find_name, replace_name, term))) 
+    rownames_to_column("Paremeter") %>%
+    full_join(effectsize::standardize_parameters(reg, two_sd = F) %>%
+                select(Parameter, Std_Coefficient) %>%
+                rename("β'" = Std_Coefficient)) %>%
+    full_join(effectsize::standardize_parameters(reg, two_sd = T) %>% 
+                select(Parameter, Std_Coefficient) %>%
+                rename("β''" = Std_Coefficient) %>%
+                mutate(Parameter = gsub(find_name, replace_name, Parameter))) 
   
   return(res_tab)
 }
