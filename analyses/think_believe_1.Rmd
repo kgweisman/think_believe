@@ -85,7 +85,8 @@ d1_long %>%
 # version for cogsci 2020 submission
 d1_long %>%
   left_join(sample_size_d1) %>%
-  ggplot(aes(x = super_cat, 
+  ggplot(aes(x = factor(super_cat, 
+                        labels = c("relig.", "fact.")), 
              # put NAs on top of bar
              fill = factor(response_cat,
                            levels = c(NA, "think", "believe"), 
@@ -97,6 +98,7 @@ d1_long %>%
   theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
   labs(x = "Question type", y = "Percent of responses", fill = "Response")
+ggsave("../figures/cogsci2020/fig01.png")
 ```
 
 ## By category

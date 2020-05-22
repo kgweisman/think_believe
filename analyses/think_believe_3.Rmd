@@ -36,7 +36,7 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 “think” and “believe” in an American English setting as identified by Heiphetz, Landers, and Van Leeuwen. Our fifth sub-hypothesis is that the Bay Area portion of the study will replicate the results of the earlier study of Heiphetz, Landers, and Van Leeuwen."
 
 
-<p style="color:darkred">**KW EXECUTIVE SUMMARY (2020-01-20): We replicated the original finding in the US (and the findings of Think Believe 1 and 2): participants were more likely to circle "believe" for sentences in religious contexts than sentences in scientific contexts. We found the same pattern in four out of the five countries/langauges included in this study, with the exception of Ghana.**</p>
+<p style="color:darkred">**KW EXECUTIVE SUMMARY (2020-01-20): We replicated the original finding in the US (and the findings of Think Believe 1 and 2): participants were more likely to circle "believe" for sentences in religious contexts than sentences in factual contexts. We found the same pattern in four out of the five countries/langauges included in this study, with the exception of Ghana.**</p>
 
 <p style="color:darkred">**As in previous studies, the pattern was weaker in Ghana/Fante than in other countries/languages -- indeed, it was not present. As in Think Believe 1 (but not Think Believe 2), the pattern was stronger in Thailand/Thai.**</p>
 
@@ -82,8 +82,9 @@ d3_long %>%
 # version for cogsci 2020 submission
 d3_long %>%
   left_join(sample_size_d1) %>%
+  filter(country != "Ghana (undergrads)") %>%
   ggplot(aes(x = factor(super_cat, 
-                        labels = c("relig.", "scientific")), 
+                          labels = c("relig.", "fact.")), 
              # put NAs on top of bar
              fill = factor(response_cat,
                            levels = c(NA, "think", "believe"), 
@@ -95,6 +96,7 @@ d3_long %>%
   theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
   labs(x = "Vignette type", y = "Percent of responses", fill = "Response")
+ggsave("../figures/cogsci2020/fig03.png")
 ```
 
 ## By question

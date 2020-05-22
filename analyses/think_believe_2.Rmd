@@ -490,6 +490,9 @@ d2_long %>%
                                  # levels = c("think", "believe", "know", "other"))) %>%
                                  levels = c("know", "think", "believe", "other"))) %>%
                                  # levels = c("other", "know", "think", "believe"))) %>%
+  mutate(super_cat = recode_factor(super_cat,
+                                   "religious" = "religious",
+                                   "fact" = "matter-of-fact")) %>%
   left_join(top_words %>% select(response_lemma2, order)) %>%
   ggplot(aes(x = reorder(response_lemma2, order), 
              y = proportion, fill = response_color)) +
@@ -500,6 +503,7 @@ d2_long %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
   labs(x = "Response", y = "Percent of responses", fill = "Response type")
+ggsave("../figures/cogsci2020/fig02.png")
 ```
 
 ```{r}
