@@ -58,7 +58,6 @@ d1 %>%
   janitor::adorn_totals()
 ```
 
-
 # Plots
 
 We'll begin by plotting responses of "think" (red) vs. "believe" (turquoise) to get an overall sense of any patterns in the data.
@@ -296,14 +295,14 @@ regtab_fun(r1.3, std_beta = T,
            predictor_name3 = "Category (well-known vs. esoteric & personal life fact)",
            predictor_var4 = "category2_fact_E_L",
            predictor_name4 = "Category (esoteric vs. personal life fact)") %>% 
-  regtab_style_fun(row_emph = c(2:5, 10:25)) %>%
-  group_rows("Intercept", start_row = 1, end_row = 1) %>%
-  group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
-  group_rows("Country comparisons", start_row = 6, end_row = 9) %>%
-  group_rows("Interactions: Ghana", start_row = 10, end_row = 13) %>%
-  group_rows("Interactions: Thailand", start_row = 14, end_row = 17) %>%
-  group_rows("Interactions: China", start_row = 18, end_row = 21) %>%
-  group_rows("Interactions: Vanuatu", start_row = 22, end_row = 25)
+  regtab_style_fun(row_emph = c(2:5, 10:25)) # %>%
+  # group_rows("Intercept", start_row = 1, end_row = 1) %>%
+  # group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
+  # group_rows("Country comparisons", start_row = 6, end_row = 9) %>%
+  # group_rows("Interactions: Ghana", start_row = 10, end_row = 13) %>%
+  # group_rows("Interactions: Thailand", start_row = 14, end_row = 17) %>%
+  # group_rows("Interactions: China", start_row = 18, end_row = 21) %>%
+  # group_rows("Interactions: Vanuatu", start_row = 22, end_row = 25)
 ```
 
 ```{r, include = F}
@@ -394,3 +393,275 @@ r1.5b_vt <- t.test(prop_believe ~ super_cat, paired = T,
 **The difference between question categories was significant in each country/language considered alone.**
 
 
+
+# Languages spoken
+
+```{r}
+d1_lang <- d1 %>% 
+  mutate_at(vars(contains("flang"), contains("olang")),
+            ~ tolower(.)) %>%
+  mutate_at(vars(contains("flang"), contains("olang")),
+            ~ sjmisc::set_na(., na = c("\\.", ".", "NA", "mdata", 
+                             "missing", "missing data"))) %>%
+  mutate(english = case_when(
+    grepl("eng", tolower(demo_flang)) |
+      grepl("eng", tolower(demo_olang_TEXT)) |
+      grepl("eng", tolower(thb1_demo_flang)) |
+      grepl("eng", tolower(thb1_demo_olang_1_TEXT)) ~ "English",
+    is.na(demo_flang) & is.na(demo_olang_TEXT) &
+      is.na(thb1_demo_flang) & is.na(thb1_demo_olang_1_TEXT) ~ NA_character_,
+    TRUE ~ "No English"))
+```
+
+```{r}
+d1_lang %>%
+  count(country, english) %>%
+  spread(english, n) %>%
+  janitor::adorn_totals("row") %>%
+  kable() %>%
+  kable_styling()
+```
+
+## Plots
+
+```{r, fig.width = 2.8, fig.asp = 0.7}
+# after cogsci 2020 submission
+d1_long %>%
+  # left_join(sample_size_d1) %>%
+  left_join(d1_lang %>% select(thb1_subj, english)) %>%
+  filter(!is.na(english),
+         !(country == "US" & english == "No English"),
+         !(country == "China" & english == "No English")) %>%
+  ggplot(aes(x = factor(super_cat, 
+                        labels = c("relig.", "fact.")), 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(english ~ country, scales = "free", space = "free") +
+  geom_bar(position = "fill", 
+           alpha = 0.7, color = "black", size = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(title = "Study 1",
+       x = "Question type", y = "Percent of responses", fill = "Response")
+```
+```{r, fig.width = 2.8, fig.asp = 0.7}
+# after cocci 2020 submission
+d1_long %>%
+  # left_join(sample_size_d1) %>%
+  left_join(d1_lang %>% select(thb1_subj, english)) %>%
+  filter(!is.na(english),
+         !(country == "US" & english == "No English"),
+         !(country == "China" & english == "No English")) %>%
+  ggplot(aes(x = factor(super_cat, 
+                        labels = c("relig.", "fact.")), 
+             # put NAs on top of bar
+             fill = factor(response_cat,
+                           levels = c(NA, "think", "believe"), 
+                           exclude = NULL))) +
+  facet_grid(. ~ english, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
+  scale_y_continuous(labels = scales::percent) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "Question type", y = "Percent of responses", fill = "Response")
+```
+## Parallel to KW Analysis #1
+
+```{r, echo = T}
+# note: using most maximal common random effects structure
+r1.6_eng <- lmer(believe ~ super_cat * country + 
+                   (1 + super_cat | thb1_subj) + (1 | question),
+                 # (1 + super_cat || thb1_subj) + (1 | question), 
+                 # (1 | thb1_subj) + (1 | question),
+                 # (1 + super_cat | thb1_subj),
+                 data = d1_long %>%
+                   left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                   filter(english == "English"))
+
+r1.6_noeng <- lmer(believe ~ super_cat * country + 
+                     (1 + super_cat | thb1_subj) + (1 | question),
+                   # (1 + super_cat || thb1_subj) + (1 | question), 
+                   # (1 | thb1_subj) + (1 | question),
+                   # (1 + super_cat | thb1_subj),
+                   data = d1_long %>%
+                     left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                     filter(english == "No English",
+                            country %in% c("Ghana", "Thailand", "Vanuatu")) %>%
+                     mutate(country = factor(country, 
+                                             levels = c("Ghana", "Thailand", 
+                                                        "Vanuatu"))),
+                   contrasts = list(country = cbind("_gh" = c(1, 0, -1),
+                                                    "_th" = c(0, 1, -1))))
+```
+
+```{r}
+bind_rows(regtab_fun(r1.6_eng, std_beta = T) %>% 
+            mutate(Language = "English"),
+          regtab_fun(r1.6_noeng, std_beta = T) %>% 
+            mutate(Language = "No English")) %>%
+  select(Language, everything()) %>%
+  regtab_style_fun(row_emph = c(2, 12)) %>%
+  collapse_rows(1)
+```
+
+## Parallel to KW Analysis #1 (with interaction)
+```{r, echo = T}
+# note: using most maximal common random effects structure
+r1.7 <- lmer(believe ~ super_cat * country * english + 
+               (1 + super_cat | thb1_subj) + (1 | question),
+             # (1 + super_cat || thb1_subj) + (1 | question), 
+             # (1 | thb1_subj) + (1 | question),
+             # (1 + super_cat | thb1_subj),
+             data = d1_long %>%
+               left_join(d1_lang %>% select(thb1_subj, english)) %>%
+               mutate(english = factor(english, 
+                                       levels = c("English", "No English"))),
+             contrasts = list(english = cbind("No Eng. vs. GM" = c(-1, 1))))
+```
+
+```{r}
+regtab_fun(r1.7) %>%
+  regtab_style_fun(row_emph = 2) %>%
+  collapse_rows(1)
+```
+
+## Parallel to KW Analysis #1 (by country)
+```{r}
+r1.8_eng_gh <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "English", country == "Ghana"))
+
+r1.8_noeng_gh <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "No English", country == "Ghana"))
+
+r1.8_eng_th <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "English", country == "Thailand"))
+
+r1.8_noeng_th <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "No English", country == "Thailand"))
+
+r1.8_eng_vt <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "English", country == "Vanuatu"))
+
+r1.8_noeng_vt <- lmer(believe ~ super_cat + 
+                        (1 + super_cat | thb1_subj) + (1 | question),
+                      # (1 + super_cat || thb1_subj) + (1 | question), 
+                      # (1 | thb1_subj) + (1 | question),
+                      # (1 + super_cat | thb1_subj),
+                      data = d1_long %>%
+                        left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                        filter(english == "No English", country == "Vanuatu"))
+```
+
+```{r}
+bind_rows(regtab_fun(r1.8_eng_gh, std_beta = T) %>% 
+            mutate(Country = "Ghana", Language = "English"),
+          regtab_fun(r1.8_noeng_gh, std_beta = T) %>% 
+            mutate(Country = "Ghana", Language = "No English"),
+          regtab_fun(r1.8_eng_th, std_beta = T) %>% 
+            mutate(Country = "Thailand", Language = "English"),
+          regtab_fun(r1.8_noeng_th, std_beta = T) %>% 
+            mutate(Country = "Thailand", Language = "No English"),
+          regtab_fun(r1.8_eng_vt, std_beta = T) %>% 
+            mutate(Country = "Vanuatu", Language = "English"),
+          regtab_fun(r1.8_noeng_vt, std_beta = T) %>% 
+            mutate(Country = "Vanuatu", Language = "No English")) %>%
+  select(Country, Language, everything()) %>%
+  regtab_style_fun(row_emph = seq(2, 12, 2)) %>%
+  collapse_rows(1:2)
+```
+
+## Parallel to KW Analysis #2
+
+```{r, echo = T}
+# note: using random effects structure from Analysis #2 above
+r1.9_eng <- lmer(believe ~ super_cat + 
+                   # (1 + super_cat | country/thb1_subj) + (1 | question),
+                 # (1 + super_cat || country/thb1_subj) + (1 | question),
+                 (1 | country/thb1_subj) + (1 | question),
+                 # (1 + super_cat | country/thb1_subj),
+                 data = d1_long %>%
+                   left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                   filter(english == "English") %>%
+                   mutate(country = factor(country, levels = levels_country)))
+
+r1.9_noeng <- lmer(believe ~ super_cat + 
+                     # (1 + super_cat | country/thb1_subj) + (1 | question),
+                   # (1 + super_cat || country/thb1_subj) + (1 | question),
+                   (1 | country/thb1_subj) + (1 | question),
+                   # (1 + super_cat | country/thb1_subj),
+                   data = d1_long %>%
+                     left_join(d1_lang %>% select(thb1_subj, english)) %>%
+                     filter(english == "No English",
+                            country %in% c("Ghana", "Thailand", "Vanuatu")) %>%
+                     mutate(country = factor(country, 
+                                             levels = c("Ghana", "Thailand", 
+                                                        "Vanuatu"))))
+```
+
+```{r}
+bind_rows(regtab_fun(r1.9_eng, std_beta = T) %>% 
+            mutate(Language = "English"),
+          regtab_fun(r1.9_noeng, std_beta = T) %>% 
+            mutate(Language = "No English")) %>%
+  select(Language, everything()) %>%
+  regtab_style_fun(row_emph = c(2, 4)) %>%
+  collapse_rows(1)
+```
+
+## Parallel to KW Analysis #2 (with interaction)
+
+```{r, echo = T}
+# note: using random effects structure from Analysis #2 above
+r1.10 <- lmer(believe ~ super_cat * english + 
+               # (1 + super_cat | country/thb1_subj) + (1 | question),
+             # (1 + super_cat || country/thb1_subj) + (1 | question),
+             (1 | country/thb1_subj) + (1 | question),
+             # (1 + super_cat | country/thb1_subj),
+             data = d1_long %>%
+               left_join(d1_lang %>% select(thb1_subj, english)) %>%
+               mutate(english = factor(english, 
+                                       levels = c("English", "No English")),
+                      country = factor(country, levels = levels_country)),
+             contrasts = list(english = cbind("No Eng. vs. GM" = c(-1, 1))))
+```
+
+```{r}
+regtab_fun(r1.10) %>%
+  regtab_style_fun(row_emph = 2) %>%
+  collapse_rows(1)
+```

@@ -101,7 +101,9 @@ set.seed(1234)
 demo_p456 <- full_join(demo_p4, demo_p5) %>% full_join(demo_p6) %>%
   # remove duplicates if participants completed more than one survey packet
   mutate(rand = runif(nrow(.), 0, 999999)) %>%
+  group_by(subj) %>%
   top_n(1, rand) %>%
+  ungroup() %>%
   distinct() %>%
   mutate(religion = case_when(
     demo_rlgn %in% c("Agnostic",
