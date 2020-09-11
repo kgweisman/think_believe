@@ -20,9 +20,9 @@ source("./scripts/var_recode_contrast.R")
 source("./scripts/data_prep.R")
 ```
 
-Note: There are some subjective calls here, and translation issues. For now, I've used a combination of automatic "lemmatization" and hand-coding to do my best to code whether responses should count as "believe" (e.g., including obvious cases like "believes" and "believed"; including Bislama "belif" and "bilif" and other spellings).
+Note: We have used a combination of automatic "lemmatization" and hand-coding to do my best to code whether responses should count as "believe" (e.g., including obvious cases like "believes" and "believed"; including Bislama "belif" and "bilif" and other spellings).
 
-As of 2020-01-22, I have two versions of these variables -- one that only includes responses that are strictly "believe" and one that also includes cases that involve the word "believe" (e.g., "firmly believes," "does not believe") -- and likewise for think. The looser interpretations are called `believeX` (or "belief\*") and `thinkX` (or "think\*").
+We provide two versions of these variables -- one that only includes responses that are strictly "believe" and one that also includes cases that involve the word "believe" (e.g., "firmly believes," "does not believe") -- and likewise for think. The looser interpretations are called `believeX` (or "belief\*") and `thinkX` (or "think\*"). These looser interpretations are the variables that are the focus of the current analyses.
 
 
 # Overview
@@ -38,7 +38,7 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 “think” and “believe” in an American English setting as identified by Heiphetz, Landers, and Van Leeuwen. Our fifth sub-hypothesis is that the Bay Area portion of the study will replicate the results of the earlier study of Heiphetz, Landers, and Van Leeuwen."
 
 
-<p style="color:darkred">**KW EXECUTIVE SUMMARY (2020-01-20): We replicated the original finding in the US (and the findings of Think Believe 1): participants were more likely to write in "believe" for religious than fact questions. We found the same pattern in all five countries/langauges included in this study.**</p>
+<p style="color:darkred">**SUMMARY: We replicated the original finding in the US (and the findings of Think Believe 1): participants were more likely to write in "believe" for religious than fact questions. We found the same pattern in all five countries/langauges included in this study.**</p>
 
 <p style="color:darkred">**As in Think Believe 1, the pattern was somewhat weaker in Ghana/Fante than in other countries/languages. In Think Believe 1, the pattern was stronger in Thailand/Thai (and no stronger or weaker in China/Mandarin or Vanuatu/Bislama); in contrast, in this study it was stronger in China/Mandarin, weaker in Vanuatu/Bislama, and no stronger or weaker Thailand/Thai. I suspect these patterns are largely accounted for by the fact that so few participants in Ghana and especially Vanuatu spontaneously used the word "believe" in their free responses.**</p>
 
@@ -130,37 +130,21 @@ Technical note: Unless specified otherwise, all of these analyses use "effect co
 
 First, I used a mixed effects logistic regression predicting how likely a participant was to write "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to write "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
 
-Note that this analysis treats responses of "think" as the same as any other non-"believe" response -- I'm just trying to predict how likey the participant was to write in "believe."
+Note that this analysis treats responses of "think" as the same as any other non-"believe" response.
 
 ```{r, echo = T}
 r2.1 <- lmer(believeX ~ super_cat * country 
              + (1 + super_cat | thb2_subj) + (1 | question), 
-             # + (1 + super_cat || thb2_subj) + (1 | question), 
-             # + (1 + super_cat | thb2_subj),
-             # + (1 + super_cat || thb2_subj), 
-             # + (1 | thb2_subj) + (1 | question), 
              data = d2_long)
 ```
 
 ```{r}
-regtab_fun(r2.1, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+regtab_fun(r2.1, std_beta = F) %>% regtab_style_fun(row_emph = c(2, 7:10))
 ```
 
 ```{r, include = F}
 regtab_ran_fun(r2.1, subj_var = "thb2_subj") %>% regtab_style_fun()
 ```
-
-The effects of primary interest are in bold:
-
-- **Category (religious)**: Collapsing across countries/languages, participants were indeed more likely to say "believe" for "religious" questions, echoing the forced choice results of Think Believe 1.
-- Country (Gh.): Participants in Ghana were generally less likely than other participants to say "believe," collapsing across question categories. (This is in contrast to Think Believe 1, in which they were more likely to circle "believe.")
-- Country (Th.): Participants in Thailand were no more or less likely than other participants to say "believe," collapsing across question categories. (This is in contrast to Think Believe 1, in which they were less likely to circle "believe.")
-- Country (Ch.): Participants in China were no more or less likely than other participants to say "believe," caollapsing across question categories. (They did not differ from the grand mean in Think Believe 1.)
-- Country (Vt.): Participants in Vanuatu were no more or less likely than other participants to say "believe," collapsing across question categories. (They did not differ from the grand mean in Think Believe 1.)
-- **Category (religious) x Country (Gh.)**: The difference in rates of "believe" responses between question categories was smaller in Ghana than in other countries, echoing the forced choice results of Think Believe 1. 
-- **Category (religious) x Country (Th.)**: The difference in rates of "believe" responses between question categories was no smaller or larger in Thailand than in other countries. (In Think Believe 1, the difference was exaggerated in Thailand.)
-- **Category (religious) x Country (Ch.)**: The difference in rates of "believe" responses between question categories was larger in China than in other countries. (In Think Believe 1, this difference did not differ from the difference in other countries.)
-- **Category (religious) x Country (Vt.)**: The difference in rates of "believe" responses between question categories was smaller in Vanuatu than in other countries. (In Think Believe 1, this difference did not differ from the difference in other countries.)
 
 **Take-away: The predicted effect is evident in this dataset, as it was in Think Believe 1. It appears to be exaggerated in China and diminished in Ghana and Vanuatu, a pattern which differs from Think Believe 1.**
 
@@ -168,16 +152,12 @@ The effects of primary interest are in bold:
 # re-code to get US vs. grand mean (drop Vanuatu instead of US)
 r2.1a <- lmer(believeX ~ super_cat * country 
              + (1 + super_cat | thb2_subj) + (1 | question), 
-             # + (1 + super_cat || thb2_subj) + (1 | question), 
-             # + (1 + super_cat | thb2_subj),
-             # + (1 + super_cat || thb2_subj), 
-             # + (1 | thb2_subj) + (1 | question), 
              data = d2_long,
              contrasts = list(country = "contr.sum"))
 ```
 
 ```{r, include = F}
-regtab_fun(r2.1a, std_beta = T) %>% regtab_style_fun(row_emph = c(2, 7:10))
+regtab_fun(r2.1a, std_beta = F) %>% regtab_style_fun(row_emph = c(2, 7:10))
 ```
 
 ## KW Analyses #1a-1e (by country)
@@ -189,8 +169,8 @@ Next, I did this same analysis within each country/langauge alone (using the mos
 r2.1_us <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
                   # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
-                  # (1 | thb2_subj) + (1 | question),
-                  (1 + super_cat | thb2_subj),
+                  (1 | thb2_subj) + (1 | question),
+                  # (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj),
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "US"))
@@ -198,8 +178,8 @@ r2.1_us <- lmer(believeX ~ super_cat +
 r2.1_gh <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
                   # (1 + super_cat || thb2_subj) + (1 | question),
-                  # (1 | thb2_subj) + (1 | question),
-                  (1 + super_cat | thb2_subj),
+                  (1 | thb2_subj) + (1 | question),
+                  # (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "Ghana"))
@@ -207,8 +187,8 @@ r2.1_gh <- lmer(believeX ~ super_cat +
 r2.1_th <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question), # failed to converge
                   # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
-                  # (1 | thb2_subj) + (1 | question),
-                  (1 + super_cat | thb2_subj),
+                  (1 | thb2_subj) + (1 | question),
+                  # (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "Thailand"))
@@ -216,8 +196,8 @@ r2.1_th <- lmer(believeX ~ super_cat +
 r2.1_ch <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
                   # (1 + super_cat || thb2_subj) + (1 | question),
-                  # (1 | thb2_subj) + (1 | question), # failed to converge
-                  (1 + super_cat | thb2_subj),
+                  (1 | thb2_subj) + (1 | question), 
+                  # (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "China"))
@@ -225,19 +205,19 @@ r2.1_ch <- lmer(believeX ~ super_cat +
 r2.1_vt <- lmer(believeX ~ super_cat + 
                   # (1 + super_cat | thb2_subj) + (1 | question),
                   # (1 + super_cat || thb2_subj) + (1 | question), # failed to converge
-                  # (1 | thb2_subj) + (1 | question),
-                  (1 + super_cat | thb2_subj),
+                  (1 | thb2_subj) + (1 | question),
+                  # (1 + super_cat | thb2_subj),
                   # (1 + super_cat || thb2_subj), 
                   # (1 | thb2_subj),
                 data = d2_long %>% filter(country == "Vanuatu"))
 ```
 
 ```{r}
-bind_rows(regtab_fun(r2.1_us, std_beta = T) %>% mutate(Country = "US"),
-          regtab_fun(r2.1_gh, std_beta = T) %>% mutate(Country = "Ghana"),
-          regtab_fun(r2.1_th, std_beta = T) %>% mutate(Country = "Thailand"),
-          regtab_fun(r2.1_ch, std_beta = T) %>% mutate(Country = "China"),
-          regtab_fun(r2.1_vt, std_beta = T) %>% mutate(Country = "Vanuatu")) %>%
+bind_rows(regtab_fun(r2.1_us, std_beta = F) %>% mutate(Country = "US"),
+          regtab_fun(r2.1_gh, std_beta = F) %>% mutate(Country = "Ghana"),
+          regtab_fun(r2.1_th, std_beta = F) %>% mutate(Country = "Thailand"),
+          regtab_fun(r2.1_ch, std_beta = F) %>% mutate(Country = "China"),
+          regtab_fun(r2.1_vt, std_beta = F) %>% mutate(Country = "Vanuatu")) %>%
   select(Country, everything()) %>%
   regtab_style_fun(row_emph = seq(2, 10, 2)) %>%
   collapse_rows(1)
@@ -254,10 +234,10 @@ In this analysis, I treated country/language as a random rather than fixed effec
 r2.2 <- lmer(believeX ~ super_cat 
              # + (1 + super_cat | country/thb2_subj) + (1 | question), # failed to converge
              # + (1 + super_cat || country/thb2_subj) + (1 | question), # failed to converge
-             # + (1 + super_cat | country/thb2_subj), # failed to converge
+             # + (1 + super_cat | country/thb2_subj), 
              # + (1 + super_cat || country/thb2_subj), # failed to converge
-             # + (1 | country/thb2_subj) + (1 | question), # failed to converge
-             + (1 | country/thb2_subj), 
+             + (1 | country/thb2_subj) + (1 | question), 
+             # + (1 | country/thb2_subj), 
              data = d2_long)
 ```
 
@@ -277,24 +257,24 @@ Finally, I ran a version of this first model looking at 5 categories of question
 
 ```{r, echo = T}
 r2.3 <- lmer(believe ~ category2 * country 
-             # + (1 + category2 | thb1_subj) + (1 | question), # failed to converge
-             # + (1 + category2 || thb1_subj) + (1 | question), # failed to converge
-             # + (1 + category2 | thb1_subj), # failed to converge
-             # + (1 + category2 || thb1_subj),
-             + (1 | thb2_subj) + (1 | question),
+             # + (1 + category2 | thb2_subj) + (1 | question), # ranfx cor > 0.9
+             # + (1 + category2 || thb2_subj) + (1 | question), # ranfx cor > 0.9
+             # + (1 + category2 | thb2_subj), # ranfx cor > 0.9
+             # + (1 + category2 || thb2_subj),
+             + (1 | thb2_subj) + (1 | question), # match to study 1
              data = d2_long)
 ```
 
 ```{r}
-regtab_fun(r2.3, std_beta = T,
+regtab_fun(r2.3, std_beta = F,
            predictor_var1 = "category2_relig_fact", 
-           predictor_name1 = "Category (Religious vs. fact)",
+           predictor_name1 = "Contrast A",
            predictor_var2 = "category2_relig_local_other",
-           predictor_name2 = "Category (local vs. other religious)",
-           predictor_var3 = "category2_fact_W_EL",
-           predictor_name3 = "Category (well-known vs. esoteric & personal life fact)",
-           predictor_var4 = "category2_fact_E_L",
-           predictor_name4 = "Category (esoteric vs. personal life fact)") %>% 
+           predictor_name2 = "Contrast B",
+           predictor_var3 = "category2_fact_WE_L",
+           predictor_name3 = "Contrast C",
+           predictor_var4 = "category2_fact_W_E",
+           predictor_name4 = "Contrast D") %>% 
   regtab_style_fun(row_emph = c(2:5, 10:25)) # %>%
   # group_rows("Intercept", start_row = 1, end_row = 1) %>%
   # group_rows("Category comparisons", start_row = 2, end_row = 5) %>%
@@ -306,7 +286,18 @@ regtab_fun(r2.3, std_beta = T,
 ```
 
 ```{r, include = F}
-regtab_ran_fun(r2.3, subj_var = "thb1_subj") %>% regtab_style_fun()
+regtab_ran_fun(r2.3, subj_var = "thb2_subj") %>% regtab_style_fun()
+```
+
+```{r, echo = T}
+r2.3b <- lmer(believe ~ category2 * country 
+             # + (1 + category2 | thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 || thb1_subj) + (1 | question), # failed to converge
+             # + (1 + category2 | thb1_subj), # failed to converge
+             # + (1 + category2 || thb1_subj),
+             + (1 | thb2_subj) + (1 | question),
+             contrasts = list(country = "contr.sum"),
+             data = d2_long)
 ```
 
 The first orthogonal contrast compared the two "religious" categories to the three "fact" categories ("Category (Religious vs. fact)"). This parallels the previous analyses, and the results are similar: Overall, participants were more likely to circle "believe" for religious questions than fact questions, and this tendency was diminished in Ghana and Vanuatu, and exaggerated in China.
@@ -344,10 +335,11 @@ Here is the first preregistered analyis: a 5 (country) x 2 (question category) m
 
 ```{r, echo = T}
 r2.4 <- d2_anova %>%
-  anova_test(dv = prop_believeX, 
-                      wid = thb2_subj, 
-                      between = country, 
-                      within = super_cat)
+  anova_test(dv = "prop_believeX", 
+             wid = "thb2_subj", 
+             between = "country", 
+             within = "super_cat",
+             observed = "country")
 
 get_anova_table(r2.4)
 ```
@@ -356,7 +348,7 @@ This analysis aligns with the regressions above and with Think Believe 1, sugges
 
 The preregistration indicated that we'd conduct pairwise follow-up analyses comparing the two question categories and comparing pairs of countires/languages -- but, again, I don't really think we're interested in comparing pairs of countries/languages, so I'm going to skip that for now. Instead, I'll compare the two questions categories within each country/language (to explore the significant interaction), as I did for Think Believe 1.
 
-Here we go:
+Follow-up analysis below.
 
 ### Comparing question categories
 
@@ -365,6 +357,34 @@ r2.5a <- t.test(prop_believeX ~ super_cat, paired = T, d2_anova); r2.5a
 ```
 
 Collapsing across countries/languages, **participants wrote significantly more "believe" responses for questions in the religious category (`r 100 * (r2.5a$estimate[1] %>% round(2))`%) than they did for questions in the fact category (`r 100 * (r2.5a$estimate[2] %>% round(2))`%)**.
+
+```{r}
+d2_anova %>%
+  group_by(country, super_cat) %>%
+  summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+  ungroup() %>%
+  bind_rows(d2_long %>%
+              group_by(country) %>%
+              summarise(mean_prop = mean(believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(super_cat = "OVERALL")) %>%
+  bind_rows(d2_anova %>%
+              group_by(super_cat) %>%
+              summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(country = "OVERALL")) %>%
+  bind_rows(d2_anova %>%
+              summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(super_cat = "OVERALL", country = "OVERALL")) %>%
+  spread(super_cat, mean_prop) %>%
+  select(country, OVERALL, religious, fact) %>%
+  mutate(country = factor(country, levels = c(levels_country, "OVERALL"))) %>% 
+  arrange(country) %>%
+  janitor::adorn_rounding(2) %>%
+  kable() %>%
+  kable_styling()
+```
 
 ### Comparing question categories within countries/languages
 
@@ -392,6 +412,64 @@ r2.5b_vt <- t.test(prop_believeX ~ super_cat, paired = T,
 ```
 
 **The difference between question categories was significant in each country/language considered alone.**
+
+## Prereg Analysis #2
+
+```{r, echo = T}
+d2b_anova <- d2_long %>%
+  distinct(thb2_subj, country, category, question, believeX) %>%
+  group_by(thb2_subj, country, category) %>%
+  summarise(prop_believeX = mean(believeX)) %>%
+  ungroup() %>%
+  mutate(thb2_subj = factor(thb2_subj))
+
+contrasts(d2b_anova$country) <- contrast_country
+contrasts(d2b_anova$category) <- contrast_category
+```
+
+Here is the second preregistered analyis: a 5 (country) x 5 (question sub-category) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants included the word stem "believe" in their free respones as the DV.
+
+```{r, echo = T}
+r2.10 <- d2b_anova %>%
+  anova_test(dv = "prop_believeX", 
+             wid = "thb2_subj", 
+             between = "country", 
+             within = "category",
+             observed = "country")
+
+get_anova_table(r2.10)
+```
+
+This analysis aligns with the regressions above, suggesting that participants' tendency to use "believe" varied by country/language (`country`) and by question category (`category`), and the difference between question category varied across countries/languages (i.e., there was an interaction: `country:category`).
+
+```{r}
+d2b_anova %>%
+  group_by(country, category) %>%
+  summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+  ungroup() %>%
+  bind_rows(d2_long %>%
+              group_by(country) %>%
+              summarise(mean_prop = mean(believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(category = "OVERALL")) %>%
+  bind_rows(d2b_anova %>%
+              group_by(category) %>%
+              summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(country = "OVERALL")) %>%
+  bind_rows(d2b_anova %>%
+              summarise(mean_prop = mean(prop_believeX, na.rm = T)) %>%
+              ungroup() %>%
+              mutate(category = "OVERALL", country = "OVERALL")) %>%
+  spread(category, mean_prop) %>%
+  select(country, OVERALL, `Christian religious`, `Buddhist religious`,
+         `well-known fact`, `esoteric fact`, `life fact`) %>%
+  mutate(country = factor(country, levels = c(levels_country, "OVERALL"))) %>% 
+  arrange(country) %>%
+  janitor::adorn_rounding(2) %>%
+  kable() %>%
+  kable_styling()
+```
 
 
 # Free response data
@@ -435,50 +513,17 @@ top_words <- d2_long %>%
   mutate(order = 1:nrow(.))
 ```
 
-```{r}
-four_cols <- c("gray", "khaki", gg_color_hue(2))
-```
-
-```{r, fig.width = 7, fig.asp = 0.5}
-d2_long %>%
-  filter(response_lemma2 %in% top_words$response_lemma2) %>%
-  count(country, super_cat, #category, 
-        response_lemma2) %>%
-  complete(response_lemma2, nesting(country, super_cat), fill = list(n = 0)) %>%
-  arrange(super_cat, #category, 
-          country, desc(n)) %>%
-  group_by(country, super_cat) %>% #, category) %>%
-  mutate(proportion = round(n/sum(n), 2)) %>%
-  ungroup() %>%
-  mutate(response_lemma2 = reorder(response_lemma2, desc(n)),
-         response_color = case_when(response_lemma2 == "think" ~ "think",
-                                    response_lemma2 == "believe" ~ "believe",
-                                    response_lemma2 == "know" ~ "know",
-                                    TRUE ~ "other"),
-         response_color = factor(response_color,
-                                 levels = c("other", "know", "think", "believe"))) %>%
-  left_join(top_words %>% select(response_lemma2, order)) %>%
-  ggplot(aes(x = reorder(response_lemma2, order), 
-             y = proportion, fill = response_color)) +
-  facet_grid(super_cat ~ country) +
-  geom_bar(stat = "identity", alpha = 0.7, color = "black", size = 0.1) +
-  scale_fill_manual(values = four_cols) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        legend.position = "top") +
-  labs(x = "response", y = "proportion", fill = "response type")
-```
-
 ```{r, fig.width = 6, fig.asp = 0.4, include = T}
-# version for cogsci 2020 submission
 four_cols2 <- c(gg_color_hue(2), "khaki", "gray")
 d2_long %>%
+  left_join(sample_size_d2) %>%
   filter(response_lemma2 %in% top_words$response_lemma2) %>%
-  count(country, super_cat, #category, 
+  count(country_n, super_cat, #category, 
         response_lemma2) %>%
-  complete(response_lemma2, nesting(country, super_cat), fill = list(n = 0)) %>%
+  complete(response_lemma2, nesting(country_n, super_cat), fill = list(n = 0)) %>%
   arrange(super_cat, #category, 
-          country, desc(n)) %>%
-  group_by(country, super_cat) %>% #, category) %>%
+          country_n, desc(n)) %>%
+  group_by(country_n, super_cat) %>% #, category) %>%
   mutate(proportion = round(n/sum(n), 2)) %>%
   ungroup() %>%
   mutate(response_lemma2 = reorder(response_lemma2, desc(n)),
@@ -487,23 +532,93 @@ d2_long %>%
                                     response_lemma2 == "know" ~ "know",
                                     TRUE ~ "other"),
          response_color = factor(response_color,
-                                 # levels = c("think", "believe", "know", "other"))) %>%
-                                 levels = c("know", "think", "believe", "other"))) %>%
-                                 # levels = c("other", "know", "think", "believe"))) %>%
+                                 levels = c("think", "believe", "know", 
+                                            "other"))) %>%
   mutate(super_cat = recode_factor(super_cat,
                                    "religious" = "religious",
                                    "fact" = "matter-of-fact")) %>%
   left_join(top_words %>% select(response_lemma2, order)) %>%
   ggplot(aes(x = reorder(response_lemma2, order), 
              y = proportion, fill = response_color)) +
-  facet_grid(super_cat ~ country) +
+  facet_grid(super_cat ~ country_n) +
   geom_bar(stat = "identity", alpha = 0.7, color = "black", size = 0.1) +
   scale_fill_manual(values = four_cols2) +
   scale_y_continuous(labels = scales::percent) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
         legend.position = "top") +
-  labs(x = "Response", y = "Percent of responses", fill = "Response type")
-ggsave("../figures/cogsci2020/fig02.png")
+  labs(x = "Word stem", y = "Percent of responses", fill = "Response type")
+ggsave("../figures/journal_submission/fig_2.pdf")
+```
+
+```{r, fig.width = 6, fig.asp = 0.8, include = T}
+four_cols2 <- c(gg_color_hue(2), "khaki", "gray")
+d2_long %>%
+  filter(response_lemma2 %in% top_words$response_lemma2) %>%
+  count(country, category, #category, 
+        response_lemma2) %>%
+  complete(response_lemma2, nesting(country, category), fill = list(n = 0)) %>%
+  arrange(category, #category, 
+          country, desc(n)) %>%
+  group_by(country, category) %>% #, category) %>%
+  mutate(proportion = round(n/sum(n), 2)) %>%
+  ungroup() %>%
+  mutate(response_lemma2 = reorder(response_lemma2, desc(n)),
+         response_color = case_when(response_lemma2 == "think" ~ "think",
+                                    response_lemma2 == "believe" ~ "believe",
+                                    response_lemma2 == "know" ~ "know",
+                                    TRUE ~ "other"),
+         response_color = factor(response_color,
+                                 levels = c("think", "believe", "know", 
+                                            "other"))) %>%
+  mutate(category = recode_factor(
+    category,
+    "Christian religious" = "Christian religious",
+    "Buddhist religious" = "Buddhist religious",
+    "well-known fact" = "widely-known matter-of-fact",
+    "esoteric fact" = "less widely-known matter-of-fact",
+    "life fact" = "personal life matter-of-fact")) %>%
+  left_join(top_words %>% select(response_lemma2, order)) %>%
+  ggplot(aes(x = reorder(response_lemma2, order), 
+             y = proportion, fill = response_color)) +
+  facet_grid(category ~ country) +
+  geom_bar(stat = "identity", alpha = 0.7, color = "black", size = 0.1) +
+  scale_fill_manual(values = four_cols2) +
+  scale_y_continuous(labels = scales::percent) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top") +
+  labs(x = "Word stem", y = "Percent of responses", fill = "Response type")
+# ggsave("../figures/journal_submission/fig_s2.pdf")
+```
+
+```{r, fig.width = 6, fig.asp = 0.8}
+d2_long %>%
+  mutate(response_color = case_when(response_lemma2 == "think" ~ "think",
+                                    response_lemma2 == "believe" ~ "believe",
+                                    response_lemma2 == "know" ~ "know",
+                                    TRUE ~ "other"),
+         response_color = factor(response_color,
+                                 levels = c("other", "know", "think", 
+                                            "believe"))) %>%
+  mutate(category = recode_factor(
+    category,
+    "Christian religious" = "Christian religious",
+    "Buddhist religious" = "Buddhist religious",
+    "well-known fact" = "widely-known matter-of-fact",
+    "esoteric fact" = "less widely-known matter-of-fact",
+    "life fact" = "personal life matter-of-fact")) %>%
+  left_join(top_words %>% select(response_lemma2, order)) %>%
+  ggplot(aes(x = reorder(str_wrap(question_text_short, 40), order), 
+             fill = response_color)) +
+  facet_grid(country ~ category, scales = "free", space = "free") +
+  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.2) +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_manual(values = four_cols2[c(4:3, 1:2)]) +
+  # geom_hline(yintercept = 0.5, lty = 2) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+        legend.position = "top",
+        plot.margin = (unit(c(0.2, 0.2, 0.2, 1.8), "cm"))) +
+  labs(x = "Item", y = "Percent of responses", fill = "Response")
+ggsave("../figures/journal_submission/fig_s2.pdf")
 ```
 
 ```{r}
@@ -511,280 +626,55 @@ write_csv(d2_long, "../data/thinkbelieve2_freeresponse_kw.csv")
 ```
 
 
-# Languages spoken
+# Demographics
 
 ```{r}
-d2_lang <- d2 %>% 
-  mutate_at(vars(contains("flang"), contains("olang")),
-            ~ tolower(.)) %>%
-  mutate_at(vars(contains("flang"), contains("olang")),
-            ~ sjmisc::set_na(., na = c("\\.", ".", "NA", "mdata", 
-                             "missing", "missing data"))) %>%
-  mutate(english = case_when(
-    grepl("eng", tolower(demo_flang)) |
-      grepl("eng", tolower(demo_olang_TEXT)) |
-      grepl("eng", tolower(thb2_demo_flang)) |
-      grepl("eng", tolower(thb2_demo_olang_1_TEXT)) ~ "English",
-    is.na(demo_flang) & is.na(demo_olang_TEXT) &
-      is.na(thb2_demo_flang) & is.na(thb2_demo_olang_1_TEXT) ~ NA_character_,
-    TRUE ~ "No English"))
+d2_demo <- d2 %>%
+  select(country, thb2_subj, thb2_religion, starts_with("thb2_demo"))
 ```
 
 ```{r}
-d2_lang %>%
-  count(country, english) %>%
-  spread(english, n) %>%
-  janitor::adorn_totals("row") %>%
-  kable() %>%
+d2_demo %>%
+  count(country)
+```
+
+```{r}
+d2_demo %>%
+  group_by(country) %>%
+  summarise(min = min(thb2_demo_age, na.rm = T),
+             max = max(thb2_demo_age, na.rm = T),
+             mean = mean(thb2_demo_age, na.rm = T)) %>%
+  mutate_at(vars(-country), ~round(., 2)) %>%
+  ungroup()
+```
+
+```{r}
+d2_demo %>%
+  count(country, thb2_demo_sex) %>%
+  group_by(country) %>%
+  mutate(prop = round(n/sum(n, na.rm = T), 2)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(thb2_demo_sex, prop)
+```
+
+```{r}
+d2_demo %>%
+  group_by(country) %>%
+  summarise_at(vars(ends_with("_num")), mean, na.rm = T) %>%
+  mutate_at(vars(-country), ~round(., 2)) %>%
+  ungroup() %>%
+  kable() %>% 
   kable_styling()
 ```
 
-## Plots
-
-```{r, fig.width = 2.8, fig.asp = 0.7}
-# after cogsci 2020 submission
-d2_long %>%
-  # left_join(sample_size_d2) %>%
-  left_join(d2_lang %>% select(thb2_subj, english)) %>%
-  filter(!is.na(english),
-         !(country == "US" & english == "No English"),
-         !(country == "China" & english == "No English")) %>%
-  ggplot(aes(x = factor(super_cat, 
-                        labels = c("relig.", "fact.")), 
-             # put NAs on top of bar
-             fill = factor(responseX_cat4,
-                           levels = c(NA, "other response", "think*", "know*", 
-                                      "believe*"), 
-                           exclude = NULL))) +
-  facet_grid(english ~ country, scales = "free", space = "free") +
-  geom_bar(position = "fill", 
-           alpha = 0.7, color = "black", size = 0.1) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = four_cols) +
-  # geom_hline(yintercept = 0.5, lty = 2) +
-  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        legend.position = "top") +
-  labs(title = "Study 2",
-       x = "Question type", y = "Percent of responses", fill = "Response")
-```
-```{r, fig.width = 2.8, fig.asp = 0.7}
-# after cogsci 2020 submission
-d2_long %>%
-  # left_join(sample_size_d2) %>%
-  left_join(d2_lang %>% select(thb2_subj, english)) %>%
-  filter(!is.na(english),
-         !(country == "US" & english == "No English"),
-         !(country == "China" & english == "No English")) %>%
-  ggplot(aes(x = factor(super_cat, 
-                        labels = c("relig.", "fact.")), 
-             # put NAs on top of bar
-             fill = factor(responseX_cat4,
-                           levels = c(NA, "other response", "think*", "know*", 
-                                      "believe*"), 
-                           exclude = NULL))) +
-  facet_grid(. ~ english, scales = "free", space = "free") +
-  geom_bar(position = "fill", alpha = 0.7, color = "black", size = 0.1) +
-  scale_y_continuous(labels = scales::percent) +
-  scale_fill_manual(values = four_cols) +
-  # geom_hline(yintercept = 0.5, lty = 2) +
-  theme(#axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-        legend.position = "top") +
-  labs(x = "Question type", y = "Percent of responses", fill = "Response")
-```
-## Parallel to KW Analysis #1
-
-```{r, echo = T}
-# note: using most maximal common random effects structure
-r2.6_eng <- lmer(believeX ~ super_cat * country + 
-                   # (1 + super_cat | thb2_subj) + (1 | question),
-                   # (1 + super_cat || thb2_subj) + (1 | question),
-                   (1 | thb2_subj) + (1 | question),
-                 # (1 + super_cat | thb2_subj),
-                 data = d2_long %>%
-                   left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                   filter(english == "English"))
-
-r2.6_noeng <- lmer(believeX ~ super_cat * country + 
-                     # (1 + super_cat | thb2_subj) + (1 | question),
-                     # (1 + super_cat || thb2_subj) + (1 | question),
-                     (1 | thb2_subj) + (1 | question),
-                   # (1 + super_cat | thb2_subj),
-                   data = d2_long %>%
-                     left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                     filter(english == "No English",
-                            country %in% c("Ghana", "Thailand", "Vanuatu")) %>%
-                     mutate(country = factor(country, 
-                                             levels = c("Ghana", "Thailand", 
-                                                        "Vanuatu"))),
-                   contrasts = list(country = cbind("_gh" = c(1, 0, -1),
-                                                    "_th" = c(0, 1, -1))))
-```
 
 ```{r}
-bind_rows(regtab_fun(r2.6_eng, std_beta = T) %>% 
-            mutate(Language = "English"),
-          regtab_fun(r2.6_noeng, std_beta = T) %>% 
-            mutate(Language = "No English")) %>%
-  select(Language, everything()) %>%
-  regtab_style_fun(row_emph = c(2, 12)) %>%
-  collapse_rows(1)
-```
-
-## Parallel to KW Analysis #1 (with interaction)
-
-```{r, echo = T}
-# note: using most maximal common random effects structure
-r2.7 <- lmer(believeX ~ super_cat * country * english + 
-               (1 + super_cat | thb2_subj) + (1 | question),
-             # (1 + super_cat || thb2_subj) + (1 | question), 
-             # (1 | thb2_subj) + (1 | question),
-             # (1 + super_cat | thb2_subj),
-             data = d2_long %>%
-               left_join(d2_lang %>% select(thb2_subj, english)) %>%
-               mutate(english = factor(english, 
-                                       levels = c("English", "No English"))),
-             contrasts = list(english = cbind("No Eng. vs. GM" = c(-1, 1))))
-```
-
-```{r}
-regtab_fun(r2.7) %>%
-  regtab_style_fun(row_emph = 2) %>%
-  collapse_rows(1)
-```
-
-## Parallel to KW Analysis #1 (by country)
-
-```{r}
-r2.8_eng_gh <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "English", country == "Ghana"))
-
-r2.8_noeng_gh <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "No English", country == "Ghana"))
-
-r2.8_eng_th <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "English", country == "Thailand"))
-
-r2.8_noeng_th <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "No English", country == "Thailand"))
-
-r2.8_eng_vt <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "English", country == "Vanuatu"))
-
-r2.8_noeng_vt <- lmer(believeX ~ super_cat + 
-                        (1 + super_cat | thb2_subj) + (1 | question),
-                      # (1 + super_cat || thb2_subj) + (1 | question), 
-                      # (1 | thb2_subj) + (1 | question),
-                      # (1 + super_cat | thb2_subj),
-                      data = d2_long %>%
-                        left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                        filter(english == "No English", country == "Vanuatu"))
-```
-
-```{r}
-bind_rows(regtab_fun(r2.8_eng_gh, std_beta = T) %>% 
-            mutate(Country = "Ghana", Language = "English"),
-          regtab_fun(r2.8_noeng_gh, std_beta = T) %>% 
-            mutate(Country = "Ghana", Language = "No English"),
-          regtab_fun(r2.8_eng_th, std_beta = T) %>% 
-            mutate(Country = "Thailand", Language = "English"),
-          regtab_fun(r2.8_noeng_th, std_beta = T) %>% 
-            mutate(Country = "Thailand", Language = "No English"),
-          regtab_fun(r2.8_eng_vt, std_beta = T) %>% 
-            mutate(Country = "Vanuatu", Language = "English"),
-          regtab_fun(r2.8_noeng_vt, std_beta = T) %>% 
-            mutate(Country = "Vanuatu", Language = "No English")) %>%
-  select(Country, Language, everything()) %>%
-  regtab_style_fun(row_emph = seq(2, 12, 2)) %>%
-  collapse_rows(1:2)
-```
-
-## Parallel to KW Analysis #2
-
-```{r, echo = T}
-# note: using random effects structure from Analysis #2 above
-r2.9_eng <- lmer(believeX ~ super_cat + 
-                   # (1 + super_cat | country/thb2_subj) + (1 | question),
-                 # (1 + super_cat || country/thb2_subj) + (1 | question),
-                 (1 | country/thb2_subj) + (1 | question),
-                 # (1 + super_cat | country/thb2_subj),
-                 data = d2_long %>%
-                   left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                   filter(english == "English") %>%
-                   mutate(country = factor(country, levels = levels_country)))
-
-r2.9_noeng <- lmer(believeX ~ super_cat + 
-                     # (1 + super_cat | country/thb2_subj) + (1 | question),
-                   # (1 + super_cat || country/thb2_subj) + (1 | question),
-                   (1 | country/thb2_subj) + (1 | question),
-                   # (1 + super_cat | country/thb2_subj),
-                   data = d2_long %>%
-                     left_join(d2_lang %>% select(thb2_subj, english)) %>%
-                     filter(english == "No English",
-                            country %in% c("Ghana", "Thailand", "Vanuatu")) %>%
-                     mutate(country = factor(country, 
-                                             levels = c("Ghana", "Thailand", 
-                                                        "Vanuatu"))))
-```
-
-```{r}
-bind_rows(regtab_fun(r2.9_eng, std_beta = T) %>% 
-            mutate(Language = "English"),
-          regtab_fun(r2.9_noeng, std_beta = T) %>% 
-            mutate(Language = "No English")) %>%
-  select(Language, everything()) %>%
-  regtab_style_fun(row_emph = c(2, 4)) %>%
-  collapse_rows(1)
-```
-
-## Parallel to KW Analysis #2 (with interaction)
-
-```{r, echo = T}
-# note: using random effects structure from Analysis #2 above
-r2.10 <- lmer(believeX ~ super_cat * english + 
-               # (1 + super_cat | country/thb2_subj) + (1 | question),
-             # (1 + super_cat || country/thb2_subj) + (1 | question),
-             (1 | country/thb2_subj) + (1 | question),
-             # (1 + super_cat | country/thb2_subj),
-             data = d2_long %>%
-               left_join(d2_lang %>% select(thb2_subj, english)) %>%
-               mutate(english = factor(english, 
-                                       levels = c("English", "No English")),
-                      country = factor(country, levels = levels_country)),
-             contrasts = list(english = cbind("No Eng. vs. GM" = c(-1, 1))))
-```
-
-```{r}
-regtab_fun(r2.10) %>%
-  regtab_style_fun(row_emph = 2) %>%
-  collapse_rows(1)
+d2_demo %>%
+  count(country, thb2_demo_regp, thb2_religion) %>%
+  group_by(country) %>%
+  mutate(prop = round(n/sum(n, na.rm = T), 2)) %>%
+  ungroup() %>%
+  select(-n) %>%
+  spread(thb2_demo_regp, prop)
 ```
