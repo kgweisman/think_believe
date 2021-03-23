@@ -23,7 +23,7 @@ source("./scripts/data_prep.R")
 
 # Overview
 
-From the preregistration ([link](https://aspredicted.org/p6iy3.pdf)):
+From the preregistration:
 
 > "Our overarching hypothesis for the present study is that [...] other languages will have an epistemic verb that is more likely to be used for religious attitude reports (similar to English “believe”) and a different epistemic verb that is more likely to be used for matter-of-fact attitude reports (similar to English “think”). 
 > 
@@ -50,7 +50,7 @@ d1_raw %>%
   janitor::adorn_totals()
 ```
 
-However, `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "Yes", thb1_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
+However, `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d1_raw %>% filter(thb1_ctry %in% levels_country, thb1_ordr == "Yes", thb1_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses we will exclude these participants, leaving us with the following samples:
 
 ```{r}
 d1 %>% 
@@ -135,15 +135,15 @@ ggsave("../figures/journal_submission/fig_s1.pdf")
 ```
 
 
-# Analysis: KW without looking at preregistration
+# Analysis: without looking at preregistration
 
-Here's how I analyzed the data before looking at the preregistration. I think these analyses are valuable because they're a little more efficient than the preregistered analyses -- no need for follow-up tests -- and they directly test the question of whether the effect of interest varies across countries/langauges.
+Here's how we analyzed the data before looking at the preregistration. We think these analyses are valuable because they're a little more efficient than the preregistered analyses -- no need for follow-up tests -- and they directly test the question of whether the effect of interest varies across countries/langauges.
 
-Technical note: Unless specified otherwise, all of these analyses use "effect coding" for categorical variables (e.g., country, category of question) -- meaning that each country/langauge is compared to the "grand mean" collapsing across all countries/languages. Because of degrees of freedom issues, each analysis only compares 4 of the 5 countries to the grand mean -- by default, I've left out the comparison of the US/English to the grand mean, but stats for that comparison could easily be calculated (if we left out another country/language instead). This is just to say that you won't see statements like "The effect was exaggerated in the US relative to other countries," although they might be true.
+Technical note: Unless specified otherwise, all of these analyses use "effect coding" for categorical variables (e.g., country, category of question) -- meaning that each country/langauge is compared to the "grand mean" collapsing across all countries/languages. Because of degrees of freedom issues, each analysis only compares 4 of the 5 countries to the grand mean -- by default, we have left out the comparison of the US/English to the grand mean, but stats for that comparison could easily be calculated (if we left out another country/language instead). This is just to say that you won't see statements like "The effect was exaggerated in the US relative to other countries," although they might be true.
 
-## KW Analysis #1
+## Analysis #1
 
-First, I used a mixed effects logistic regression predicting how likely a participant was to circle "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to circle "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
+First, we used a mixed effects logistic regression predicting how likely a participant was to circle "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to circle "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
 
 ```{r, echo = T}
 r1.1 <- lmer(believe ~ super_cat * country 
@@ -175,9 +175,9 @@ r1.1a <- lmer(believe ~ super_cat * country
 regtab_fun(r1.1a, std_beta = F) %>% regtab_style_fun(row_emph = c(2, 7:10))
 ```
 
-## KW Analyses #1a-1e (by country)
+## Analyses #1a-1e (by country)
 
-Next, I did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
+Next, we did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
 
 ```{r, echo = T}
 # note: using most maximal common random effects structure
@@ -231,9 +231,9 @@ bind_rows(regtab_fun(r1.1_us, std_beta = F) %>% mutate(Country = "US"),
 The effects of primary interest are in bold, and **the take-away is clear: In every country/language, participants were more likely to say "believe" in "religious" questions than in "fact" questions**.
 
 
-## KW Analysis #2
+## Analysis #2
 
-In this analysis, I treated country/language as a random rather than fixed effect (with participants nested within countries). (Note that I had to use a simpler random effects structure in order to get the model to converge.)
+In this analysis, we treated country/language as a random rather than fixed effect (with participants nested within countries). (Note that we had to use a simpler random effects structure in order to get the model to converge.)
 
 ```{r, echo = T}
 r1.2 <- lmer(believe ~ super_cat 
@@ -251,9 +251,9 @@ regtab_ran_fun(r1.2, subj_var = "thb1_subj") %>% regtab_style_fun()
 
 The effect still holds.
 
-## KW Analysis #3
+## Analysis #3
 
-Finally, I ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. I compared these categories using planned orthogonal contrasts.
+Finally, we ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. We compared these categories using planned orthogonal contrasts.
 
 ```{r, echo = T}
 r1.3 <- lmer(believe ~ category2 * country 
@@ -315,7 +315,7 @@ Note that these findings statistically control for differences across samples in
 
 From preregistration:
 
-> "Survey 1: We will conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 2 (Statement Type: religion vs. fact) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form the word “believe” (or its respective translation) as the dependent measure. To look for finer-grained differences between different religious and factual statements, we will also conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 5 (Statement Type: Buddhist religious statements vs. Christian religious statements vs. life facts vs. well-known facts vs. esoteric facts) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form of the word “believe” (or its respective translation) as the dependent measure. In all cases where omnibus ANOVAs are significant, we will conduct pairwise analyses comparing each statement type with each other statement type and each site with each other site."
+> "Survey 1: We will conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 2 (Statement Type: religion vs. fact) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form the word “believe” (or its respective translation) as the dependent measure. To look for finer-grained differences between different religious and factual statements, we will also conduct a 5 (Site: China vs. Thailand vs. Vanuatu vs. Ghana vs. United States) x 5 (Statement Type: Buddhist religious statements vs. Christian religious statements vs. life facts vs. Well-known facts vs. esoteric facts) mixed ANOVA with repeated measures on the second factor and the proportion of trials on which participants completed sentences using a form of the word “believe” (or its respective translation) as the dependent measure. In all cases where omnibus ANOVAs are significant, we will conduct pairwise analyses comparing each statement type with each other statement type and each site with each other site."
 
 ## Prereg Analysis #1
 

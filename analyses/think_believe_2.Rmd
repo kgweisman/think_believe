@@ -20,14 +20,14 @@ source("./scripts/var_recode_contrast.R")
 source("./scripts/data_prep.R")
 ```
 
-Note: We have used a combination of automatic "lemmatization" and hand-coding to do my best to code whether responses should count as "believe" (e.g., including obvious cases like "believes" and "believed"; including Bislama "belif" and "bilif" and other spellings).
+Note: We have used a combination of automatic "lemmatization" and hand-coding to do our best to code whether responses should count as "believe" (e.g., including obvious cases like "believes" and "believed"; including Bislama "belif" and "bilif" and other spellings).
 
 We provide two versions of these variables -- one that only includes responses that are strictly "believe" and one that also includes cases that involve the word "believe" (e.g., "firmly believes," "does not believe") -- and likewise for think. The looser interpretations are called `believeX` (or "belief\*") and `thinkX` (or "think\*"). These looser interpretations are the variables that are the focus of the current analyses.
 
 
 # Overview
 
-From the preregistration ([link](https://aspredicted.org/p6iy3.pdf)):
+From the preregistration:
 
 > "Our overarching hypothesis for the present study is that [...] other languages will have an epistemic verb that is more likely to be used for religious attitude reports (similar to English “believe”) and a different epistemic verb that is more likely to be used for matter-of-fact attitude reports (similar to English “think”). 
 > 
@@ -40,7 +40,7 @@ language) on the Melanesian Island of Vanuatu; (iv) Fante in Ghana; and (v) Amer
 
 <p style="color:darkred">**SUMMARY: We replicated the original finding in the US (and the findings of Think Believe 1): participants were more likely to write in "believe" for religious than fact questions. We found the same pattern in all five countries/langauges included in this study.**</p>
 
-<p style="color:darkred">**As in Think Believe 1, the pattern was somewhat weaker in Ghana/Fante than in other countries/languages. In Think Believe 1, the pattern was stronger in Thailand/Thai (and no stronger or weaker in China/Mandarin or Vanuatu/Bislama); in contrast, in this study it was stronger in China/Mandarin, weaker in Vanuatu/Bislama, and no stronger or weaker Thailand/Thai. I suspect these patterns are largely accounted for by the fact that so few participants in Ghana and especially Vanuatu spontaneously used the word "believe" in their free responses.**</p>
+<p style="color:darkred">**As in Think Believe 1, the pattern was somewhat weaker in Ghana/Fante than in other countries/languages. In Think Believe 1, the pattern was stronger in Thailand/Thai (and no stronger or weaker in China/Mandarin or Vanuatu/Bislama); in contrast, in this study it was stronger in China/Mandarin, weaker in Vanuatu/Bislama, and no stronger or weaker Thailand/Thai. We suspect these patterns are largely accounted for by the fact that so few participants in Ghana and especially Vanuatu spontaneously used the word "believe" in their free responses.**</p>
 
 
 # Samples
@@ -51,7 +51,7 @@ Before we begin, it's important to note that we had unequal sample sizes by coun
 d2_raw %>% count(thb2_ctry) %>% janitor::adorn_totals()
 ```
 
-However, `r d2_raw %>% filter(thb2_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d2_raw %>% filter(thb2_ordr == "Yes", thb2_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses I will exclude these participants, leaving us with the following samples:
+However, `r d2_raw %>% filter(thb2_ordr == "No") %>% count() %>% as.numeric()` participants completed this task after completing other surveys, and an additional `r d2_raw %>% filter(thb2_ordr == "Yes", thb2_attn == "Fail") %>% count() %>% as.numeric()` failed the attention check. In the following analyses we will exclude these participants, leaving us with the following samples:
 
 ```{r}
 d2 %>% count(country) %>% janitor::adorn_totals()
@@ -118,17 +118,17 @@ d2_long %>%
 ```
 
 
-# Analysis: KW without looking at preregistration
+# Analysis: without looking at preregistration
 
-These analyses directly parallel the way I analyzed the Think Believe 1 data before looking at the preregistration. Again, I think these analyses are valuable because they're a little more efficient than the preregistered analyses -- no need for follow-up tests -- and they directly test the question of whether the effect of interest varies across countries/langauges.
+These analyses directly parallel the way we analyzed the Think Believe 1 data before looking at the preregistration. Again, we think these analyses are valuable because they're a little more efficient than the preregistered analyses -- no need for follow-up tests -- and they directly test the question of whether the effect of interest varies across countries/langauges.
 
-As of 2020-01-22, I'm now using the more lenient "believe\*" variable in these analyses.
+As of 2020-01-22, we're now using the more lenient "believe\*" variable in these analyses.
 
-Technical note: Unless specified otherwise, all of these analyses use "effect coding" for categorical variables (e.g., country, category of question) -- meaning that each country/langauge is compared to the "grand mean" collapsing across all countries/languages. Because of degrees of freedom issues, each analysis only compares 4 of the 5 countries to the grand mean -- by default, I've left out the comparison of the US/English to the grand mean, but stats for that comparison could easily be calculated (if we left out another country/language instead). This is just to say that you won't see statements like "The effect was exaggerated in the US relative to other countries," although they might be true.
+Technical note: Unless specified otherwise, all of these analyses use "effect coding" for categorical variables (e.g., country, category of question) -- meaning that each country/langauge is compared to the "grand mean" collapsing across all countries/languages. Because of degrees of freedom issues, each analysis only compares 4 of the 5 countries to the grand mean -- by default, we've left out the comparison of the US/English to the grand mean, but stats for that comparison could easily be calculated (if we left out another country/language instead). This is just to say that you won't see statements like "The effect was exaggerated in the US relative to other countries," although they might be true.
 
-## KW Analysis #1
+## Analysis #1
 
-First, I used a mixed effects logistic regression predicting how likely a participant was to write "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to write "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
+First, we used a mixed effects logistic regression predicting how likely a participant was to write "believe" based on the superordinate category of the question ("religious" questions or "fact" questions), the country they were in/language they were using (US/English, Ghana/Fante, Thailand/Thai, China/Mandarin, or Vanuatu/Bislama), and an interaction between them, with a maximal random effects structure (random interpcepts and slopes by subject, and random intercepts by question). This analysis gives me a sense of (1) Whether participants were more likely to write "believe" for religious questions than fact questions, and whether this tendency varied by country/language, controlling for the fact that the overall rates of circling "believe" might vary by country/language (and accounting for individual differences and differences across individual questions).
 
 Note that this analysis treats responses of "think" as the same as any other non-"believe" response.
 
@@ -160,9 +160,9 @@ r2.1a <- lmer(believeX ~ super_cat * country
 regtab_fun(r2.1a, std_beta = F) %>% regtab_style_fun(row_emph = c(2, 7:10))
 ```
 
-## KW Analyses #1a-1e (by country)
+## Analyses #1a-1e (by country)
 
-Next, I did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
+Next, we did this same analysis within each country/langauge alone (using the most maximal random effect structure that converged across all countries/languages). 
 
 ```{r, echo = T}
 # note: using most maximal common random effects structure
@@ -226,9 +226,9 @@ bind_rows(regtab_fun(r2.1_us, std_beta = F) %>% mutate(Country = "US"),
 The effects of primary interest are in bold, and **the take-away is clear: In every country/language, participants were more likely to say "believe" in "religious" questions than in "fact" questions**.
 
 
-## KW Analysis #2
+## Analysis #2
 
-In this analysis, I treated country/language as a random rather than fixed effect (with participants nested within countries). 
+In this analysis, we treated country/language as a random rather than fixed effect (with participants nested within countries). 
 
 ```{r, echo = T}
 r2.2 <- lmer(believeX ~ super_cat 
@@ -251,9 +251,9 @@ regtab_ran_fun(r2.2, subj_var = "thb2_subj") %>% regtab_style_fun()
 
 The effect still holds.
 
-## KW Analysis #3
+## Analysis #3
 
-Finally, I ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. I compared these categories using planned orthogonal contrasts. 
+Finally, we ran a version of this first model looking at 5 categories of questions (rather than 2 superordinate categories): Christian religious, Buddhist religious, well-known fact, esoteric fact, and personal fact. We compared these categories using planned orthogonal contrasts. 
 
 ```{r, echo = T}
 r2.3 <- lmer(believe ~ category2 * country 
@@ -346,7 +346,7 @@ get_anova_table(r2.4)
 
 This analysis aligns with the regressions above and with Think Believe 1, suggesting that participants' tendency to write "believe" varied by country/language (`country`) and by question category (`super_cat`), and the difference between question category varied across countries/languages (i.e., there was an interaction: `country:super_cat`).
 
-The preregistration indicated that we'd conduct pairwise follow-up analyses comparing the two question categories and comparing pairs of countires/languages -- but, again, I don't really think we're interested in comparing pairs of countries/languages, so I'm going to skip that for now. Instead, I'll compare the two questions categories within each country/language (to explore the significant interaction), as I did for Think Believe 1.
+The preregistration indicated that we'd conduct pairwise follow-up analyses comparing the two question categories and comparing pairs of countires/languages -- but, again, we don't really think we're interested in comparing pairs of countries/languages, so we'll going to skip that for now. Instead, we'll compare the two questions categories within each country/language (to explore the significant interaction), as we did for Think Believe 1.
 
 Follow-up analysis below.
 
@@ -474,7 +474,7 @@ d2b_anova %>%
 
 # Free response data
 
-Here's a very quick pass at looking at the most common words/phrases in these free responses -- I did a quick and dirty "stemming" (converting, e.g., "believe" and "believes" and "believed" all to the stem "believ") but we could look into doing something more sophisticated. Here are the top 5 stems for each question category, by country: 
+Here's a very quick pass at looking at the most common words/phrases in these free responses -- we did a quick and dirty "stemming" (converting, e.g., "believe" and "believes" and "believed" all to the stem "believ") but we could look into doing something more sophisticated. Here are the top 5 stems for each question category, by country: 
 
 ```{r, include = F}
 d2_long %>%
@@ -496,7 +496,7 @@ d2_long %>%
   collapse_rows(1:3)
 ```
 
-I think there's lots to discuss here -- e.g., the common use of "know" (which I think is already of interest). Also, the Bislama data appears to be in Bislama (not translated) -- I've included "bilif" (and spelling variants) as "believe" and "ting" (as spelling variants) as "think" in all of the foregoing analyses.
+There's lots to discuss here -- e.g., the common use of "know" (which is already of interest). Also, the Bislama data appears to be in Bislama (not translated) -- we've included "bilif" (and spelling variants) as "believe" and "ting" (as spelling variants) as "think" in all of the foregoing analyses.
 
 ```{r}
 top_words <- d2_long %>%
