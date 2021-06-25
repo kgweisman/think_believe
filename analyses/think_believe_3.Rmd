@@ -84,6 +84,7 @@ d3_long %>%
         legend.position = "top") +
   labs(x = "Vignette context", y = "Percent of responses", fill = "Response")
 ggsave("../figures/journal_submission/fig_3.eps")
+ggsave("../figures/journal_submission/fig_3.jpg")
 ```
 
 ## By question

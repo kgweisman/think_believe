@@ -84,6 +84,7 @@ d1_long %>%
         legend.position = "top") +
   labs(x = "Item category", y = "Percent of responses", fill = "Response")
 ggsave("../figures/journal_submission/fig_1.eps")
+ggsave("../figures/journal_submission/fig_1.jpg")
 ```
 
 ## By category
