@@ -19,7 +19,7 @@ The remaining 15 sentences were “matter-of-fact” (e.g., Brazil is in South A
 
 A mixed effects logistic regression revealed that, as predicted, participants were generally more likely to select “believe” (or its counterpart) to complete religious vs. matter-of-fact attitude ascriptions. This distinction was more pronounced in Thailand and the US, and less pronounced in Ghana; it did not differ from the grand mean in China or Vanuatu. Nonetheless, secondary analyses confirmed that this difference was significant in each field site considered alone.
 
-![Figure 1](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_1.eps?raw=true)
+![Figure 1](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_1.jpg?raw=true)
 
 HTML preview: [Study 1 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_1.nb.html)
 
@@ -29,7 +29,7 @@ In Study 2, a separate group of participants (N=388; n=46-100 per site) complete
 
 Echoing Study 1, participants were more likely to generate responses containing the word-stem “believe” (or its counterpart) for religious compared to matter-of-fact attitude ascriptions. Indeed, in four of these five sites, “believe” (or its counterpart) appeared in the plurality of free responses to religious sentences. The difference between religious and matter-of-fact sentences was more pronounced in the US and China, less pronounced in Ghana and Vanuatu, and did not vary from the grand mean among participants in Thailand. But again, this difference was significant in each field site considered alone.
 
-![Figure 2](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_2.eps?raw=true)
+![Figure 2](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_2.jpg?raw=true)
 
 HTML preview: [Study 2 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_2.nb.html)
 
@@ -39,7 +39,7 @@ Study 3 (N=328; n=49-80 per site) provided a final, closely controlled test of o
 
 As predicted, participants were generally more likely to select “believe” (or its counterpart) when the sentence was embedded in a religious vignette as opposed to the matching matter-of-fact vignette. This distinction was more pronounced in the US and Thailand, less pronounced in Ghana, and did not differ from the grand mean among participants in China or Vanuatu. The difference was significant in four of the five sites considered alone. The difference was not significant in our sample from rural Ghana, but it did appear to be present in a sample of Ghanaian undergraduates in a small follow-up study (not shown here; see Supplement).
 
-![Figure 3](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_3.eps?raw=true)
+![Figure 3](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_3.jpg?raw=true)
 
 HTML preview: [Study 3 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_3.nb.html)
 
