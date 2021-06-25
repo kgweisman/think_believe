@@ -10,7 +10,9 @@ This repo includes analyses of the quantitative data from these three studies, w
 
 **Analysis scripts** are availalbe [here](https://github.com/kgweisman/think_believe/tree/master/analyses). To view the results of an analysis in an HTML file, download the R Notebook (extension: .nb.html) to a folder on your computer and re-open it (from that folder) in a web browser -- or use the [htmlpreview.github.com](htmlpreview.github.com) links provided below. To view and manipulate the code, download the R Markdown file (extension: .Rmd) and open it in RStudio.
 
-**Figures** are available [here](https://github.com/kgweisman/think_believe/tree/master/figures)
+**Figures** are available [here](https://github.com/kgweisman/think_believe/tree/master/figures).
+
+The OSF repository associated with this project is [here](https://osf.io/qy3js/).
 
 ## Study 1
 
