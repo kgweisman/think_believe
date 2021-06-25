@@ -40,7 +40,7 @@
 
 # think believe 1 (forced choice) -----
 # load raw data
-d1_raw <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = "V1&V2 no dupes") %>%
+d1_raw <- read_xlsx("../data/study1.xlsx", sheet = "Data") %>%
   # eliminate one duplicate
   group_by(thb1_subj) %>%
   top_n(1, thb1_batc) %>% 
@@ -49,7 +49,7 @@ d1_raw <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = "V1&V2 no du
   mutate(thb1_ctry = factor(thb1_ctry, levels = levels_country))
 
 # make question key
-key1 <- read_xlsx("../data/ThinkBelieve1_organized.xlsx", sheet = 1)[1,] %>% 
+key1 <- read_xlsx("../data/study1.xlsx", sheet = 1)[1,] %>% 
   t() %>% 
   data.frame() %>% 
   rownames_to_column("question") %>%
@@ -360,7 +360,7 @@ sample_size_d1 <- d1 %>%
 # think believe 2 (free response) -----
 
 # load raw data
-d2_raw <- read_xlsx("../data/ThinkBelieve2_organized.xlsx", sheet = "V1&V2 no dupes") %>%
+d2_raw <- read_xlsx("../data/study2.xlsx", sheet = "Data") %>%
   # ensure no duplicates
   group_by(thb2_subj) %>%
   top_n(1, thb2_batc) %>% 
@@ -369,7 +369,7 @@ d2_raw <- read_xlsx("../data/ThinkBelieve2_organized.xlsx", sheet = "V1&V2 no du
   mutate(thb2_ctry = factor(thb2_ctry, levels = levels_country))
 
 # make question key
-key2 <- read_xlsx("../data/ThinkBelieve2_organized.xlsx", sheet = 1)[1,] %>% 
+key2 <- read_xlsx("../data/study2.xlsx", sheet = 1)[1,] %>% 
   data.frame() %>%
   # get rid of extra qualtrics questions
   select(-c(StartDate:UserLanguage)) %>%
@@ -845,7 +845,7 @@ sample_size_d2 <- d2 %>%
 # think believe 3 (forced choice, controlled content) -----
 
 # load raw data
-d3_raw <- read_xlsx("../data/ThinkBelieve3_organized_updated_02.21.2020.xlsx", sheet = "V1 & V2 no dupes") %>%
+d3_raw <- read_xlsx("../data/study3.xlsx", sheet = "Data") %>%
   # identify second sample from Ghana
   mutate(thb3_ctry = case_when(
     grepl("2020", as.character(thb3_2day)) ~ "Ghana (undergrads)",
@@ -858,7 +858,7 @@ d3_raw <- read_xlsx("../data/ThinkBelieve3_organized_updated_02.21.2020.xlsx", s
   mutate(thb3_ctry = factor(thb3_ctry, levels = levels_country6))
 
 # make question key
-key3 <- read_xlsx("../data/ThinkBelieve3_organized.xlsx", sheet = 1)[1,] %>% 
+key3 <- read_xlsx("../data/study3.xlsx", sheet = 1)[1,] %>% 
   data.frame() %>%
   # get rid of extra qualtrics questions
   select(-c(StartDate:UserLanguage)) %>%

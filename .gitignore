@@ -1,15 +1,7 @@
-# ignore data
-data/*
-*.csv
-*.xls
-*.xlsx
-
 # ignore R files
 .DS_Store
+.Rhistory
 
-# ignore figures
-Figures/*
-*.jpeg
-*.jpg
-*.png
-*.pdf
+# ignore archived material
+*/archive/*
+Analyses/scripts/archive/*
