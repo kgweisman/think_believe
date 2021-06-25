@@ -8,7 +8,7 @@ This repo includes analyses of the quantitative data from these three studies, w
 
 **Datasets** for each of the three studies are available [here](https://github.com/kgweisman/think_believe/tree/master/data).
 
-**Analysis scripts** are organized by study. To view the results of an analysis in an HTML file, download the R Notebook (extension: .nb.html) to a folder on your computer and re-open it (from that folder) in a web browser -- or use the [htmlpreview.github.com](htmlpreview.github.com) links provided below. To view and manipulate the code, download the R Markdown file (extension: .Rmd) and open it in RStudio.
+**Analysis scripts** are availalbe [here](https://github.com/kgweisman/think_believe/tree/master/analyses). To view the results of an analysis in an HTML file, download the R Notebook (extension: .nb.html) to a folder on your computer and re-open it (from that folder) in a web browser -- or use the [htmlpreview.github.com](htmlpreview.github.com) links provided below. To view and manipulate the code, download the R Markdown file (extension: .Rmd) and open it in RStudio.
 
 **Figures** are available [here](https://github.com/kgweisman/think_believe/tree/master/figures)
 
@@ -21,7 +21,7 @@ A mixed effects logistic regression revealed that, as predicted, participants we
 
 ![Figure 1](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_1.eps?raw=true)
 
-HTML preview: [Study 1 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/think_believe_1.nb.html)
+HTML preview: [Study 1 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_1.nb.html)
 
 ## Study 2
 
@@ -31,7 +31,7 @@ Echoing Study 1, participants were more likely to generate responses containing 
 
 ![Figure 2](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_2.eps?raw=true)
 
-HTML preview: [Study 2 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/think_believe_2.nb.html)
+HTML preview: [Study 2 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_2.nb.html)
 
 ## Study 3
 
@@ -41,6 +41,6 @@ As predicted, participants were generally more likely to select “believe” (o
 
 ![Figure 3](https://github.com/kgweisman/think_believe/blob/master/figures/journal_submission/fig_3.eps?raw=true)
 
-HTML preview: [Study 3 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/think_believe_3.nb.html)
+HTML preview: [Study 3 analyses](http://htmlpreview.github.io/?https://github.com/kgweisman/think_believe/blob/master/analyses/think_believe_3.nb.html)
 
 
